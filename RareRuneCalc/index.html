@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rare Rune Milestone Bulk Calculator</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='24' cy='20' r='12' fill='%2300d4aa'/><circle cx='40' cy='20' r='12' fill='%2300d4aa'/><circle cx='18' cy='34' r='12' fill='%2300d4aa'/><circle cx='46' cy='34' r='12' fill='%2300d4aa'/><rect x='30' y='38' width='4' height='18' rx='2' fill='%23008866' transform='rotate(8 32 47)'/></svg>"
+<title>OR2 TOOL — Rare Rune Milestone Bulk Calculator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='24' cy='20' r='12' fill='%2300d4aa'/><circle cx='40' cy='20' r='12' fill='%2300d4aa'/><circle cx='18' cy='34' r='12' fill='%2300d4aa'/><circle cx='46' cy='34' r='12' fill='%2300d4aa'/><rect x='30' y='38' width='4' height='18' rx='2' fill='%23008866' transform='rotate(8 32 47)'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -656,6 +656,51 @@
   .proj-row.current .proj-tier { color: var(--accent); }
   .proj-row.current .proj-bulk { color: var(--text-bright); }
 
+  /* Time estimator */
+  .time-result {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .time-row.main {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    padding: 12px;
+    margin-top: 4px;
+  }
+
+  .time-label {
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 10px;
+  }
+
+  .time-val {
+    color: var(--text-bright);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .time-val.accent {
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
   .hidden { display: none !important; }
 
   .divider {
@@ -826,9 +871,8 @@
 <div class="app">
   <!-- Header -->
   <div class="header">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;">
+    <div style="margin-bottom:14px;">
       <div class="tag">OR2 TOOL BY PRICE</div>
-      <button class="btn-tutorial" onclick="toggleTutorial()">? How to Use</button>
     </div>
     <h1>OR2 <span>Rare Rune Milestone</span> Bulk Calculator</h1>
     <p>Find the perfect bulk amount for 1/50,000 rare rune milestone farming, using binary search</p>
@@ -877,7 +921,10 @@
 
   <!-- Setup Panel -->
   <div class="panel" id="setupPanel">
-    <div class="panel-title">⚙ Configuration</div>
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>⚙ Configuration</span>
+      <button class="btn-tutorial" onclick="toggleTutorial()">? How to Use</button>
+    </div>
     <div class="input-row">
       <div class="input-group">
         <label>Starting Bulk Amount</label>
@@ -887,7 +934,7 @@
         <label>Current Milestone Tier</label>
         <div class="tier-stepper">
           <button class="tier-btn" onclick="adjustTier(-1)">−</button>
-          <input type="text" id="tierInput" value="27" autocomplete="off" spellcheck="false">
+          <input type="text" id="tierInput" value="27" autocomplete="off" spellcheck="false" oninput="onTierChange()">
           <button class="tier-btn" onclick="adjustTier(1)">+</button>
         </div>
       </div>
@@ -954,6 +1001,40 @@
     <div class="panel-title">◆ Projected Bulk Per Tier</div>
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier-up multiplies rune speed by 1.13×, so divide bulk by 1.13 to keep the same RPS.</div>
     <div class="projections-table" id="projectionsTable"></div>
+  </div>
+
+  <!-- Time to Tier Panel -->
+  <div class="panel hidden" id="timePanel">
+    <div class="panel-title">⏱ Time to Next Tier</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Estimate how long until you tier up, assuming ~1 rare rune every 40s per clone.</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Clone Count</label>
+        <input type="text" id="cloneInput" placeholder="e.g. 5" value="1" autocomplete="off" spellcheck="false" oninput="recalcTime()">
+      </div>
+      <div class="input-group">
+        <label>Current Rare Runes</label>
+        <input type="text" id="currentRunesInput" placeholder="e.g. 12000" value="0" autocomplete="off" spellcheck="false" oninput="recalcTime()">
+      </div>
+    </div>
+    <div class="time-result" id="timeResult">
+      <div class="time-row">
+        <span class="time-label">Runes needed</span>
+        <span class="time-val" id="timeRunesNeeded">—</span>
+      </div>
+      <div class="time-row">
+        <span class="time-label">Runes remaining</span>
+        <span class="time-val" id="timeRunesRemaining">—</span>
+      </div>
+      <div class="time-row">
+        <span class="time-label">Rate</span>
+        <span class="time-val" id="timeRate">—</span>
+      </div>
+      <div class="time-row main">
+        <span class="time-label">Estimated time</span>
+        <span class="time-val accent" id="timeEta">—</span>
+      </div>
+    </div>
   </div>
 
   <!-- Search Panel -->
@@ -1251,9 +1332,22 @@ function runeSpeedMulti(tier) {
 }
 
 let foundBulk = null;
+let lastPerfectBulk = null;
+
+function onTierChange() {
+  const tier = parseInt(document.getElementById('tierInput').value) || 1;
+  if (!document.getElementById('foundBanner').classList.contains('hidden')) {
+    document.getElementById('foundTier').textContent = tier;
+    document.getElementById('foundMulti').textContent = runeSpeedMulti(tier).toFixed(2);
+  }
+  if (!document.getElementById('projectionsPanel').classList.contains('hidden') && lastPerfectBulk) {
+    buildProjections(lastPerfectBulk, tier);
+  }
+}
 
 function showFound(val) {
   foundBulk = val;
+  lastPerfectBulk = val;
   const tier = parseInt(document.getElementById('tierInput').value) || 1;
 
   document.getElementById('searchPanel').classList.add('hidden');
@@ -1273,6 +1367,11 @@ function showFound(val) {
 function refineSearch() {
   if (foundBulk === null) return;
 
+  // If coming from known bulk path, ensure startInput has a value for the range bar
+  if (!document.getElementById('startInput').value) {
+    document.getElementById('startInput').value = toSci(foundBulk * 1.2);
+  }
+
   // Set up a tight linear search around the found value
   // Use the last known lo/hi if they're close, otherwise ±20% of found
   const margin = foundBulk * 0.2;
@@ -1280,13 +1379,17 @@ function refineSearch() {
   hi = (hi && hi < foundBulk * 2) ? hi : foundBulk + margin;
   mid = (lo + hi) / 2;
   phase = 'linear';
+  if (!step || step < 1) step = 1;
   step++;
   foundBulk = null;
 
   document.getElementById('foundBanner').classList.add('hidden');
   document.getElementById('projectionsPanel').classList.add('hidden');
+  document.getElementById('timePanel').classList.add('hidden');
   document.getElementById('searchPanel').classList.remove('hidden');
   document.getElementById('infoPanel').classList.remove('hidden');
+
+  if (!searchLog) searchLog = [];
 
   updateUI();
 }
@@ -1337,6 +1440,10 @@ function buildProjections(perfectBulk, currentTier) {
     `;
     table.appendChild(row);
   }
+
+  // Show time panel and calculate
+  document.getElementById('timePanel').classList.remove('hidden');
+  recalcTime();
 }
 
 function showProjectionsOnly() {
@@ -1355,12 +1462,13 @@ function showProjectionsOnly() {
 
   // Show found banner with the known bulk
   foundBulk = bulkVal;
+  lastPerfectBulk = bulkVal;
   document.getElementById('foundBanner').classList.remove('hidden');
   document.getElementById('foundValue').textContent = toSci(bulkVal);
   document.getElementById('foundRaw').textContent = toShort(bulkVal);
   document.getElementById('foundTier').textContent = tier;
   document.getElementById('foundMulti').textContent = runeSpeedMulti(tier).toFixed(2);
-  document.getElementById('refineBtn').classList.add('hidden');
+  document.getElementById('refineBtn').classList.remove('hidden');
 
   buildProjections(bulkVal, tier);
   document.getElementById('foundBanner').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1371,11 +1479,13 @@ function resetAll() {
   document.getElementById('infoPanel').classList.add('hidden');
   document.getElementById('foundBanner').classList.add('hidden');
   document.getElementById('projectionsPanel').classList.add('hidden');
+  document.getElementById('timePanel').classList.add('hidden');
   document.getElementById('logList').innerHTML = '<div class="empty-log">Start a search to see the log</div>';
   lo = hi = mid = 0;
   step = 1;
   searchLog = [];
   phase = 'log';
+  lastPerfectBulk = null;
 }
 
 document.getElementById('startInput').addEventListener('keydown', e => {
@@ -1390,6 +1500,37 @@ function adjustTier(delta) {
   const input = document.getElementById('tierInput');
   const current = parseInt(input.value) || 1;
   input.value = Math.max(1, current + delta);
+  onTierChange();
+}
+
+function formatDuration(seconds) {
+  if (!isFinite(seconds) || seconds <= 0) return '—';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+
+  if (d > 365) return Math.floor(d / 365) + 'y ' + (d % 365) + 'd';
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + Math.floor(seconds % 60) + 's';
+  return Math.floor(seconds) + 's';
+}
+
+function recalcTime() {
+  const tier = parseInt(document.getElementById('tierInput').value) || 1;
+  const clones = parseInt(document.getElementById('cloneInput').value) || 1;
+  const currentRunes = parseShort(document.getElementById('currentRunesInput').value) || 0;
+  const needed = runesRequired(tier);
+  const remaining = Math.max(0, needed - currentRunes);
+
+  // ~1 rare rune per 40 seconds per clone
+  const runesPerSec = clones / 40;
+  const etaSeconds = remaining / runesPerSec;
+
+  document.getElementById('timeRunesNeeded').textContent = needed.toLocaleString();
+  document.getElementById('timeRunesRemaining').textContent = remaining.toLocaleString();
+  document.getElementById('timeRate').textContent = clones + ' clone' + (clones !== 1 ? 's' : '') + ' × 1/40s = ' + (runesPerSec * 60).toFixed(1) + '/min';
+  document.getElementById('timeEta').textContent = remaining === 0 ? 'Ready to tier up!' : formatDuration(etaSeconds);
 }
 </script>
 </body>
