@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OR2 - Rare Rune Bulk Calculator</title>
+<title>OR2 TOOL — Rare Rune Milestone Bulk Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -164,6 +164,76 @@
   .input-group input::placeholder {
     color: var(--text-dim);
     opacity: 0.5;
+  }
+
+  /* Tier stepper */
+  .tier-stepper {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-color 0.2s;
+  }
+
+  .tier-stepper:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .tier-stepper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--text-bright);
+    text-align: center;
+    outline: none;
+    min-width: 0;
+    -moz-appearance: textfield;
+    box-shadow: none;
+  }
+
+  .tier-stepper input:focus {
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .tier-btn {
+    width: 38px;
+    background: var(--surface2);
+    border: none;
+    color: var(--text-dim);
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tier-btn:first-child {
+    border-right: 1px solid var(--border);
+  }
+
+  .tier-btn:last-child {
+    border-left: 1px solid var(--border);
+  }
+
+  .tier-btn:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .tier-btn:active {
+    background: var(--accent);
+    color: var(--bg);
   }
 
   .btn {
@@ -814,11 +884,15 @@
       </div>
       <div class="input-group" style="flex:0.55">
         <label>Current Milestone Tier</label>
-        <input type="number" id="tierInput" placeholder="e.g. 27" min="1" autocomplete="off" style="text-align:center;">
+        <div class="tier-stepper">
+          <button class="tier-btn" onclick="adjustTier(-1)">−</button>
+          <input type="text" id="tierInput" value="27" autocomplete="off" spellcheck="false">
+          <button class="tier-btn" onclick="adjustTier(1)">+</button>
+        </div>
       </div>
     </div>
     <div style="margin-top: 14px; display: flex; gap: 10px;">
-      <button class="btn btn-primary" id="startBtn" onclick="startSearch()">Start Search</button>
+      <button class="btn btn-primary" id="startBtn" onclick="startSearch()">Start Binary Search</button>
     </div>
 
     <div class="divider"></div>
@@ -1309,6 +1383,12 @@ document.getElementById('startInput').addEventListener('keydown', e => {
 
 function toggleTutorial() {
   document.getElementById('tutorialModal').classList.toggle('hidden');
+}
+
+function adjustTier(delta) {
+  const input = document.getElementById('tierInput');
+  const current = parseInt(input.value) || 1;
+  input.value = Math.max(1, current + delta);
 }
 </script>
 </body>
