@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bulk Calculator OR2</title>
+<title>OR2 TOOL — Rare Rune Milestone Bulk Calculator</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='24' cy='20' r='12' fill='%2300d4aa'/><circle cx='40' cy='20' r='12' fill='%2300d4aa'/><circle cx='18' cy='34' r='12' fill='%2300d4aa'/><circle cx='46' cy='34' r='12' fill='%2300d4aa'/><rect x='30' y='38' width='4' height='18' rx='2' fill='%23008866' transform='rotate(8 32 47)'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -858,6 +858,23 @@
     color: var(--accent);
   }
 
+  .btn-undo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn-undo:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+
   /* Responsive */
   @media (max-width: 500px) {
     .decision-row { flex-direction: column; }
@@ -876,6 +893,7 @@
     </div>
     <h1>OR2 <span>Rare Rune Milestone</span> Bulk Calculator</h1>
     <p>Find the perfect bulk amount for 1/50,000 rare rune milestone farming, using binary search</p>
+    <p>(Slime Rune recommended)</p>
   </div>
 
   <!-- Tutorial Modal -->
@@ -887,6 +905,7 @@
       <h3>Before You Start</h3>
       <ol>
         <li>Go to <span class="highlight">Settings</span> and <span class="warn">disable Rune Luck</span>.</li>
+        <li>You should use <span class="highlight">Slime Rune</span>, and the rune you're farming for is <span class="highlight">Genesis Slime</span>. This method works for most runes, but slime is good because you can see the milestone board.</li>
         <li>Go to your <span class="highlight">Profile</span> and find your <span class="highlight">Rune Bulk</span> amount. This is your starting bulk.</li>
         <li>Enter your starting bulk and your current rare rune milestone tier into the tool.</li>
       </ol>
@@ -904,6 +923,7 @@
           </ul>
         </li>
         <li>Repeat until you find the perfect bulk. A "perfect" bulk means you're getting a rare rune counted towards your milestone every 30-40 seconds.</li>
+
       </ol>
 
       <div class="tip-box">
@@ -1072,6 +1092,9 @@
       <button class="btn btn-perfect" onclick="decide('found')">★ Perfect<br><span style="font-size:11px;opacity:0.7">1/50K milestone</span></button>
       <button class="btn btn-too-high" onclick="decide('high')">▲ Too High<br><span style="font-size:11px;opacity:0.7">Doesn't count</span></button>
     </div>
+    <div style="margin-top:10px;text-align:center;">
+      <button class="btn-undo hidden" id="undoBtn" onclick="undoLastStep()">↶ Undo Last Step</button>
+    </div>
   </div>
 
   <!-- Info Panel -->
@@ -1155,6 +1178,7 @@ function toSci(n) {
 // State
 let lo, hi, mid, step, searchLog;
 let phase = 'log'; // 'log' = logarithmic phase, 'linear' = linear phase
+let stateHistory = []; // snapshots for undo
 
 // Logarithmic phase: binary search in exponent space
 // We store lo/hi as log10 values, midpoint = (logLo + logHi) / 2, test = 10^mid
@@ -1195,6 +1219,7 @@ function startSearch() {
   phase = 'log';
   step = 1;
   searchLog = [];
+  stateHistory = [];
 
   mid = computeMid();
 
@@ -1209,12 +1234,16 @@ function startSearch() {
 }
 
 function decide(result) {
+  // Save state snapshot before making changes
+  stateHistory.push({ lo, hi, mid, step, phase, logLo, logHi, logLength: searchLog.length });
+
   const entry = { step, value: mid, short: toShort(mid), sci: toSci(mid), result, phase };
   searchLog.push(entry);
 
   if (result === 'found') {
     showFound(mid);
     addLogEntry(entry);
+    document.getElementById('undoBtn').classList.add('hidden');
     return;
   }
 
@@ -1249,6 +1278,33 @@ function decide(result) {
 
   addLogEntry(entry);
   updateUI();
+  document.getElementById('undoBtn').classList.remove('hidden');
+}
+
+function undoLastStep() {
+  if (stateHistory.length === 0) return;
+
+  const prev = stateHistory.pop();
+  lo = prev.lo;
+  hi = prev.hi;
+  mid = prev.mid;
+  step = prev.step;
+  phase = prev.phase;
+  logLo = prev.logLo;
+  logHi = prev.logHi;
+
+  // Remove the log entry that was added
+  searchLog.splice(prev.logLength);
+
+  // Remove the top entry from the log display
+  const logList = document.getElementById('logList');
+  if (logList.firstChild) logList.removeChild(logList.firstChild);
+
+  updateUI();
+
+  if (stateHistory.length === 0) {
+    document.getElementById('undoBtn').classList.add('hidden');
+  }
 }
 
 function copyBulk() {
@@ -1486,6 +1542,7 @@ function resetAll() {
   searchLog = [];
   phase = 'log';
   lastPerfectBulk = null;
+  stateHistory = [];
 }
 
 document.getElementById('startInput').addEventListener('keydown', e => {
