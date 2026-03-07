@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OR2 TOOL — Rare Rune Milestone Bulk Calculator</title>
+<title>OR2 - Rare Rune Bulk Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -771,24 +771,24 @@
 
       <h3>Before You Start</h3>
       <ol>
-        <li>Go to your game <span class="highlight">Settings</span> and <span class="warn">disable Rune Luck</span>. This is critical — rune luck will throw off the results.</li>
-        <li>Open your <span class="highlight">Profile Page</span> and find your <span class="highlight">Rune Bulk</span> amount. This is your starting bulk.</li>
-        <li>Enter your starting bulk and your current rare rune milestone tier into this tool.</li>
+        <li>Go to <span class="highlight">Settings</span> and <span class="warn">disable Rune Luck</span>.</li>
+        <li>Go to your <span class="highlight">Profile</span> and find your <span class="highlight">Rune Bulk</span> amount. This is your starting bulk.</li>
+        <li>Enter your starting bulk and your current rare rune milestone tier into the tool.</li>
       </ol>
 
-      <h3>The Binary Search Process</h3>
-      <p>We're looking for the exact bulk that produces runes at 1/50,000 — the sweet spot where the rare rune milestone counts your drops. The tool uses binary search to find it efficiently.</p>
+      <h3>The Search Process</h3>
+      <p>We're looking for the exact bulk that produces runes at 1/50,000, this tool uses binary search to find it efficiently.</p>
       <ol>
-        <li>Click <span class="highlight">Start Binary Search</span>. The tool will give you a bulk amount to test.</li>
-        <li><span class="highlight">Copy</span> the scientific notation value and paste it into your in-game bulk setting.</li>
-        <li>Try farming runes for about a minute, then report the result:
+        <li>Click <span class="highlight">Start Search</span>. The tool will give you a bulk amount to test.</li>
+        <li><span class="highlight">Copy</span> the bulk value and change your bulk amount to it.</li>
+        <li>Try farming runes for a bit, then report the result:
           <ul style="margin-top:6px;padding-left:16px;">
             <li><span class="warn">Too Low</span> — You couldn't get the rare rune at all after a minute. Bulk is too small.</li>
             <li><span class="warn">Too High</span> — You got the rare rune, but it didn't count toward your milestone. Bulk is too large.</li>
             <li><span class="highlight">Perfect</span> — You got the rare rune AND it counted toward your milestone! This is the sweet spot.</li>
           </ul>
         </li>
-        <li>Repeat until you find the perfect bulk. The tool starts in <span class="highlight">Log Phase</span> (searching by orders of magnitude) then switches to <span class="highlight">Linear Phase</span> once it's narrowed down — so it converges fast even across huge ranges.</li>
+        <li>Repeat until you find the perfect bulk. A "perfect" bulk means you're getting a rare rune counted towards your milestone every 30-40 seconds.</li>
       </ol>
 
       <div class="tip-box">
@@ -796,10 +796,10 @@
       </div>
 
       <h3>Tier Projections</h3>
-      <p>Once you find your perfect bulk, the tool automatically calculates what your bulk should be for the next 8 tiers. Each milestone tier-up increases your rune speed by 1.13×, so your bulk needs to decrease by the same factor to stay at the sweet spot. No need to binary search again!</p>
+      <p>Once you find your perfect bulk, the tool automatically calculates what your bulk should be for the upcoming tiers. Each milestone tier-up increases your rune speed by 1.13×, so your bulk needs to decrease by the same factor to stay at the sweet spot.</p>
 
       <div class="tip-box">
-        <strong>Returning user?</strong> If you already know your perfect bulk from a previous session, use the "Skip to Projections" section — enter your known bulk and tier to jump straight to the projection table.
+        <strong>Returning user?</strong> If you already know your bulk, use the "Skip to Projections" section. Enter your known bulk and tier to see the projection table.
       </div>
     </div>
   </div>
@@ -814,11 +814,11 @@
       </div>
       <div class="input-group" style="flex:0.55">
         <label>Current Milestone Tier</label>
-        <input type="number" id="tierInput" placeholder="e.g. 27" value="27" min="1" autocomplete="off" style="text-align:center;">
+        <input type="number" id="tierInput" placeholder="e.g. 27" min="1" autocomplete="off" style="text-align:center;">
       </div>
     </div>
     <div style="margin-top: 14px; display: flex; gap: 10px;">
-      <button class="btn btn-primary" id="startBtn" onclick="startSearch()">Start Binary Search</button>
+      <button class="btn btn-primary" id="startBtn" onclick="startSearch()">Start Search</button>
     </div>
 
     <div class="divider"></div>
