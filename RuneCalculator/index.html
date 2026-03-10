@@ -1,0 +1,1017 @@
+import { useState, useMemo, useCallback } from "react";
+
+// ============================================================
+// DATA
+// ============================================================
+
+const RUNE_PACKS = {
+  "1M Event": {
+    color: "#ff6633",
+    isEvent: true,
+    runes: {
+      "1M Noob": { rarity: "Basic", order: 1, chance: 1, color: "#ffc878", boosts: [["Slime", 0.0001, "x", 2.5], ["Fire", 0.0001, "x", 1.25]] },
+      "1M Rookie": { rarity: "Basic", order: 2, chance: 2500, color: "#78dcff", boosts: [["Fire", 0.003, "x", 5], ["Rune Bulk", 0.01, "x", 1.15], ["Rune Luck", 0.001, "x", 1.05]] },
+      "1M Skilled": { rarity: "Basic", order: 3, chance: 200000, color: "#8cffaa", boosts: [["Luck", 1000000, "x", 100000000000], ["Comets", 0.0002, "x", 3], ["Snow", 0.0002, "x", 1.2], ["Rune Bulk", 0.01, "x", 1.2], ["Rune Luck", 0.001, "x", 1.04]] },
+      "1M Expert": { rarity: "Rare", order: 4, chance: 20000000, color: "#ff6450", boosts: [["Luck", 1000000000, "x", 10000000000000], ["Plasma", 0.0001, "x", 1.3], ["Frost", 0.0002, "x", 1.2], ["Rune Bulk", 0.0005, "x", 1.025], ["Rune Luck", 0.0005, "x", 1.025]] },
+      "1M Master": { rarity: "Secret", order: 5, chance: 15000000000, color: "#be8cff", boosts: [["Stardust", 0.0005, "x", 1.25], ["Meteors", 0.0005, "x", 1.25], ["Snowflakes", 0.0002, "x", 1.3], ["Rune Bulk", 0.0003, "x", 1.05], ["Rune Luck", 0.0003, "x", 1.05]] },
+      "1M Elite": { rarity: "Prestigious", order: 6, chance: 1000000000000, color: "#78f0ff", boosts: [["Luck", 100, "x", 1000000], ["Meteors", 0.001, "x", 1.2], ["Rune Bulk", 0.0015, "x", 1.06], ["Rune Luck", 0.0015, "x", 1.08]] },
+      "1M Mythic": { rarity: "Prestigious", order: 7, chance: 50000000000000, color: "#ff78c8", boosts: [["Luck", 1000, "x", 100000000], ["Stardust", 0.0001, "x", 1.1], ["Comets", 0.00001, "x", 1.2], ["Rune Bulk", 0.0015, "x", 1.13], ["Rune Luck", 0.0015, "x", 1.13]] },
+      "1M God": { rarity: "Prestigious", order: 8, chance: 1000000000000000, color: "#ffeb96", boosts: [["Luck", 100000000, "x", 1000000000000000], ["Comets", 0.0001, "x", 1.25], ["Stardust", 0.00001, "x", 1.2], ["Rune Bulk", 0.00005, "x", 1.15], ["Rune Luck", 0.00005, "x", 1.15], ["Passive Speed", 1e-7, "x", 0.38]] },
+      "1M Absolute": { rarity: "Prestigious", order: 9, chance: 900000000000000000, color: "#50c8ff", boosts: [["Luck", 100000, "x", 10000000000000000000], ["Singularity", 0.000075, "x", 2], ["Meteors", 0.000065, "x", 2], ["Rune Bulk", 0.000076, "x", 1.7], ["Rune Luck", 0.000076, "x", 1.7], ["Passive Speed", 0.000052, "x", 0.5]] },
+    },
+  },
+  Premium: {
+    color: "#009dff",
+    runes: {
+      Sovereign: { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Luck", 50, "x", 10000000000], ["Slime", 25, "x", 1000000]] },
+      Paragon: { rarity: "Basic", order: 2, chance: 5, color: "#d6d6d6", boosts: [["Luck", 40, "x", 10000000000], ["Fire", 2, "x", 1000], ["Rune Speed", 0.0025, "x", 2]] },
+      Titan: { rarity: "Basic", order: 3, chance: 40, color: "#fae771", boosts: [["Water", 1, "x", 20], ["Plasma", 0.5, "x", 14], ["Rune Bulk", 0.05, "x", 3]] },
+      Apex: { rarity: "Basic", order: 4, chance: 200, color: "#92f568", boosts: [["XP", 150, "x", 100000000], ["Snow", 10, "x", 3000], ["Rune Luck", 0.05, "x", 2]] },
+      Divine: { rarity: "Rare", order: 5, chance: 800, color: "#d9bfec", boosts: [["Frost", 0.1, "x", 15], ["Snowflakes", 0.05, "x", 10], ["Rune Clone", 1, "x", 1]] },
+      Royal: { rarity: "Rare", order: 6, chance: 2500, color: "#f798af", boosts: [["Meteors", 1, "x", 5], ["Ash", 0.3, "x", 3], ["Lava", 0.3, "x", 2], ["Passive Luck", 1.5, "x", 1.5]] },
+    },
+  },
+  Global: {
+    color: "#9500ff",
+    runes: {
+      Omni: { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Luck", 4, "x", 1e30]] },
+      Astra: { rarity: "Basic", order: 2, chance: 9, color: "#d6d6d6", boosts: [["Luck", 50, "x", 5000], ["Slime", 12, "x", 10000]] },
+      Nova: { rarity: "Basic", order: 3, chance: 75, color: "#fae771", boosts: [["Luck", 5, "x", 3000], ["XP", 2.5, "x", 2000], ["Snow", 1, "x", 50]] },
+      Zenith: { rarity: "Basic", order: 4, chance: 350, color: "#92f568", boosts: [["Stardust", 0.8, "x", 35], ["Rune Speed", 0.03, "x", 4]] },
+      Myth: { rarity: "Rare", order: 5, chance: 1000, color: "#d9bfec", boosts: [["Meteors", 0.5, "x", 20], ["Singularity", 0.25, "x", 10]] },
+      Ultra: { rarity: "Rare", order: 6, chance: 12000, color: "#f798af", boosts: [["Luck", 1, "x", 10000], ["Ash", 1, "x", 5], ["Rune Luck", 0.3, "x", 3], ["Rune Bulk", 0.5, "x", 2]] },
+    },
+  },
+  Slime: {
+    color: "#7dce82",
+    runes: {
+      "Clear Slime": { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Slime", 0.001, "x", 10]] },
+      "Cloud Slime": { rarity: "Basic", order: 2, chance: 10, color: "#d6d6d6", boosts: [["Luck", 0.001, "x", 6], ["Slime", 0.0015, "x", 5]] },
+      "Butter Slime": { rarity: "Basic", order: 3, chance: 50, color: "#fae771", boosts: [["Luck", 0.0025, "x", 4], ["XP", 0.002, "x", 2]] },
+      "Crunchy Slime": { rarity: "Basic", order: 4, chance: 600, color: "#92f568", boosts: [["XP", 0.002, "x", 3], ["Fire", 0.003, "x", 2]] },
+      "Icee Slime": { rarity: "Rare", order: 5, chance: 10000, color: "#d9bfec", boosts: [["XP", 0.1, "x", 8], ["Slime", 0.05, "x", 6]] },
+      "Jelly Cube Slime": { rarity: "Rare", order: 6, chance: 250000, color: "#f798af", boosts: [["Luck", 1, "x", 25], ["XP", 0.3, "x", 10], ["Slime", 0.3, "x", 3], ["Fire", 0.5, "x", 7]] },
+      "Glossy Slime": { rarity: "Secret", order: 7, chance: 100000000, color: "#f046a4", boosts: [["Luck", 3, "x", 50], ["XP", 7, "x", 200], ["Slime", 25, "x", 150], ["Fire", 3, "x", 50], ["Rune Bulk", 1, "+x", 4]] },
+      "Prismatic Slime": { rarity: "Prestigious", order: 8, chance: 1000000000000000, color: "#ffffff", boosts: [["Rune Luck", 0.01, "x", 1.5], ["Frost", 0.01, "x", 5]] },
+      "Genesis Slime": { rarity: "Prestigious", order: 9, chance: 7.5e41, color: "#ffffff", boosts: [["Luck", 200, "x", 1000000000000], ["XP", 400, "x", 1000000000000], ["Plasma", 0.05, "x", 12000], ["Snowflakes", 0.07, "x", 500], ["Rune Speed", 0.02, "x", 5], ["Rune Luck", 0.005, "x", 1.25]] },
+    },
+  },
+  Fire: {
+    color: "#ff6633",
+    runes: {
+      Ember: { rarity: "Basic", order: 1, chance: 1, color: "#ff8c50", boosts: [["XP", 0.002, "x", 3], ["Luck", 0.001, "x", 5]] },
+      Smoke: { rarity: "Basic", order: 2, chance: 25, color: "#787878", boosts: [["Fire", 0.007, "x", 10], ["XP", 0.002, "x", 5], ["Luck", 0.00005, "x", 3]] },
+      Flame: { rarity: "Basic", order: 3, chance: 450, color: "#ffb432", boosts: [["Luck", 0.03, "x", 8], ["XP", 0.02, "x", 5], ["Slime", 0.003, "x", 6]] },
+      Charcoal: { rarity: "Basic", order: 4, chance: 4000, color: "#3c3c3c", boosts: [["Luck", 0.05, "x", 10], ["XP", 0.01, "x", 3], ["Fire", 0.01, "x", 4]] },
+      Inferno: { rarity: "Rare", order: 5, chance: 30000, color: "#ff6432", boosts: [["Luck", 0.2, "x", 9], ["XP", 0.2, "x", 10], ["Slime", 0.5, "x", 8], ["Fire", 0.1, "x", 15]] },
+      "Lava Core": { rarity: "Rare", order: 6, chance: 175000, color: "#ff6669", boosts: [["Luck", 1, "x", 20], ["XP", 0.5, "x", 10], ["Slime", 0.5, "x", 25], ["Fire", 1, "x", 10]] },
+      Phoenix: { rarity: "Secret", order: 7, chance: 10000000, color: "#b339ff", boosts: [["Luck", 5, "x", 50], ["XP", 10, "x", 100], ["Slime", 5, "x", 100], ["Fire", 15, "x", 150], ["Rune Bulk", 2, "+x", 4]] },
+      Hades: { rarity: "Secret", order: 8, chance: 100000000000, color: "#680a0b", boosts: [["Luck", 250, "x", 1250], ["XP", 300, "x", 1500], ["Fire", 200, "x", 800], ["Rune Bulk", 10, "+x", 20]] },
+      "Hellstorm Core": { rarity: "Prestigious", order: 9, chance: 1.5e43, color: "#680a0b", boosts: [["Luck", 250, "x", 100000000000000], ["XP", 300, "x", 200000000000000], ["Snowflakes", 0.1, "x", 2000], ["Rune Luck", 0.003, "x", 1], ["Rune Speed", 0.01, "x", 3]] },
+    },
+  },
+  Plasma: { color: "#c896ff", runes: {
+    Spark: { rarity: "Basic", order: 1, chance: 1, color: "#c896ff", boosts: [["Plasma", 0.005, "x", 3], ["XP", 0.003, "x", 3]] },
+    Ionized: { rarity: "Basic", order: 2, chance: 100, color: "#f02323", boosts: [["XP", 0.008, "x", 5], ["Plasma", 0.01, "x", 4], ["Water", 0.006, "x", 4]] },
+    Voltage: { rarity: "Basic", order: 3, chance: 500, color: "#2fd9ff", boosts: [["Luck", 0.02, "x", 7], ["XP", 0.025, "x", 4], ["Plasma", 0.02, "x", 4]] },
+    Charged: { rarity: "Basic", order: 4, chance: 10000, color: "#64ff39", boosts: [["Luck", 0.06, "x", 10], ["XP", 0.015, "x", 20], ["Plasma", 0.025, "x", 6]] },
+    Supernova: { rarity: "Rare", order: 5, chance: 100000, color: "#ff64ff", boosts: [["Luck", 0.1, "x", 30], ["XP", 0.2, "x", 40], ["Water", 0.1, "x", 10], ["Plasma", 0.1, "x", 4]] },
+    Nebula: { rarity: "Secret", order: 6, chance: 5000000, color: "#7832b4", boosts: [["Luck", 5, "x", 100], ["XP", 12, "x", 300], ["Fire", 9, "x", 125], ["Plasma", 0.2, "x", 5]] },
+    Quasar: { rarity: "Secret", order: 7, chance: 500000000, color: "#c832ff", boosts: [["Luck", 150, "x", 1000], ["XP", 10000, "x", 100000], ["Plasma", 10, "x", 20], ["Rune Bulk", 10, "+x", 20], ["Rune Speed", 2, "x", 2]] },
+    Celestial: { rarity: "Prestigious", order: 8, chance: 100000000000, color: "#a200ff", boosts: [["Luck", 250, "x", 3000], ["XP", 30000, "x", 100000], ["Plasma", 25, "x", 100], ["Rune Bulk", 2, "x", 2]] },
+  }},
+  Snow: { color: "#b4e0ff", runes: {
+    Glacial: { rarity: "Basic", order: 1, chance: 2, color: "#f0f8ff", boosts: [["Luck", 0.015, "x", 100], ["Snow", 0.015, "x", 1.25]] },
+    Powder: { rarity: "Basic", order: 2, chance: 5002, color: "#f0f8ff", boosts: [["Snow", 0.03, "x", 3], ["XP", 0.01, "x", 100]] },
+    Rime: { rarity: "Basic", order: 3, chance: 40000000, color: "#c8e1ff", boosts: [["Luck", 0.0008, "x", 250], ["XP", 0.0005, "x", 250], ["Snow", 0.0015, "x", 4], ["Rune Bulk", 0.0005, "x", 0.5]] },
+    Sleet: { rarity: "Basic", order: 4, chance: 5000000000, color: "#96c8ff", boosts: [["Luck", 0.003, "x", 500], ["XP", 0.005, "x", 400], ["Snow", 0.006, "x", 5], ["Rune Speed", 0.01, "x", 1.75]] },
+    Permafrost: { rarity: "Basic", order: 5, chance: 250000000000, color: "#5aa0d2", boosts: [["Luck", 0.001, "x", 500], ["XP", 0.001, "x", 600], ["Frost", 0.01, "x", 0.5]] },
+    Blizzardcore: { rarity: "Rare", order: 6, chance: 4000000000000, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Frost", 0.025, "x", 0.75]] },
+    "Aurora Borealis": { rarity: "Secret", order: 7, chance: 350000000000000, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Fire", 0.02, "x", 5], ["Frost", 0.015, "x", 15], ["Rune Speed", 0.01, "x", 6]] },
+    "Polar Vortex": { rarity: "Secret", order: 8, chance: 50000000000000000, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Frost", 0.05, "x", 6], ["Rune Bulk", 0.001, "x", 2]] },
+    "Absolute Zero": { rarity: "Prestigious", order: 9, chance: 2.5e21, color: "#b4f0ff", boosts: [["Luck", 0.5, "x", 5000], ["XP", 0.2, "x", 2500], ["Snow", 0.4, "x", 20], ["Frost", 0.4, "x", 20], ["Rune Bulk", 0.01, "x", 2], ["Rune Speed", 0.01, "x", 2], ["Rune Luck", 0.01, "x", 2]] },
+  }},
+  Frost: { color: "#9efdff", runes: {
+    Frostbite: { rarity: "Basic", order: 1, chance: 2, color: "#9efdff", boosts: [["Frost", 0.0015, "x", 1.15], ["Luck", 0.001, "x", 500], ["Plasma", 0.0001, "x", 500]] },
+    Icicle: { rarity: "Basic", order: 2, chance: 500, color: "#00c8ff", boosts: [["Frost", 0.03, "x", 1.35], ["Luck", 0.03, "x", 1000], ["XP", 0.03, "x", 500], ["Rune Speed", 0.001, "x", 1.25]] },
+    Frozen: { rarity: "Basic", order: 3, chance: 25000, color: "#ffffff", boosts: [["Luck", 0.0008, "x", 1200], ["Snow", 0.005, "x", 3], ["Frost", 0.0006, "x", 1.5], ["XP", 0.0005, "x", 600], ["Rune Bulk", 0.005, "x", 0.5]] },
+    Cryogenic: { rarity: "Basic", order: 4, chance: 1500000000, color: "#e57dff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.005, "x", 400], ["Frost", 0.06, "x", 5], ["Snow", 0.001, "x", 10], ["Plasma", 0.01, "x", 250], ["Rune Speed", 0.001, "x", 1.5]] },
+    Subzero: { rarity: "Basic", order: 5, chance: 2500000000000, color: "#d0ff00", boosts: [["Luck", 0.1, "x", 500], ["XP", 0.1, "x", 600], ["Frost", 0.1, "x", 10], ["Rune Bulk", 0.05, "x", 2]] },
+    Frostcore: { rarity: "Rare", order: 6, chance: 100000000000000, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Frost", 0.02, "x", 10], ["Snow", 0.001, "x", 10]] },
+    Crystalline: { rarity: "Secret", order: 7, chance: 1.5e22, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Fire", 0.02, "x", 5], ["Plasma", 0.1, "x", 200], ["Frost", 0.01, "x", 5], ["Rune Speed", 0.001, "x", 2]] },
+    "Deep Freeze": { rarity: "Secret", order: 8, chance: 1e24, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Plasma", 0.1, "x", 150], ["Frost", 0.05, "x", 20], ["Rune Bulk", 1, "+x", 2]] },
+    "Eternal Ice": { rarity: "Prestigious", order: 9, chance: 5e25, color: "#b4f0ff", boosts: [["Luck", 0.5, "x", 5000], ["XP", 0.2, "x", 2500], ["Frost", 0.4, "x", 20], ["Rune Bulk", 1, "x", 2], ["Rune Speed", 1.01, "x", 2]] },
+  }},
+  Snowflakes: { color: "#b7eeff", runes: {
+    Needle: { rarity: "Basic", order: 1, chance: 1, color: "#9efdff", boosts: [["Snowflakes", 0.0015, "x", 2], ["Luck", 0.001, "x", 500]] },
+    Column: { rarity: "Basic", order: 2, chance: 2500, color: "#00c8ff", boosts: [["Snowflakes", 0.0005, "x", 1.2], ["Luck", 0.003, "x", 1000], ["Plasma", 0.001, "x", 300], ["Frost", 0.002, "x", 5]] },
+    Plate: { rarity: "Basic", order: 3, chance: 25000, color: "#ffffff", boosts: [["Luck", 0.0006, "x", 1200], ["Snow", 0.00002, "x", 7], ["Snowflakes", 0.0001, "x", 1.4], ["XP", 0.0004, "x", 600], ["Plasma", 0.002, "x", 400], ["Rune Bulk", 0.001, "x", 0.25]] },
+    "Stellar Dendrite": { rarity: "Basic", order: 4, chance: 25000000000, color: "#e57dff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.005, "x", 400], ["Plasma", 0.003, "x", 270], ["Snowflakes", 0.0005, "x", 2], ["Frost", 0.001, "x", 2]] },
+    "Sectored Plate": { rarity: "Basic", order: 5, chance: 2500000000000000, color: "#b7eeff", boosts: [["Luck", 0.01, "x", 500], ["XP", 0.01, "x", 600], ["Snowflakes", 0.02, "x", 2.3], ["Rune Bulk", 0.01, "x", 1.15]] },
+    Fernlike: { rarity: "Rare", order: 6, chance: 1e20, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Snowflakes", 0.005, "x", 3], ["Snow", 0.001, "x", 3]] },
+    "Radiating Dendrite": { rarity: "Secret", order: 7, chance: 3e28, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Plasma", 0.03, "x", 200], ["Snowflakes", 0.01, "x", 2.35], ["Rune Bulk", 0.01, "x", 1.15]] },
+    "Capped Column": { rarity: "Secret", order: 8, chance: 2e31, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Snowflakes", 0.05, "x", 20], ["Rune Bulk", 0.001, "x", 3], ["Rune Luck", 0.001, "x", 2]] },
+    Crystal: { rarity: "Prestigious", order: 9, chance: 2.1e33, color: "#b4f0ff", boosts: [["Luck", 0.1, "x", 50000], ["XP", 0.2, "x", 50000], ["Plasma", 0.1, "x", 200], ["Snowflakes", 0.01, "x", 10], ["Rune Bulk", 0.001, "x", 2], ["Rune Speed", 0.0001, "x", 3]] },
+    "Cosmic Ice": { rarity: "Prestigious", order: 10, chance: 2.5e40, color: "#695e9e", boosts: [["Luck", 100, "x", 100000000000], ["XP", 200, "x", 100000000000], ["Snowflakes", 0.04, "x", 50], ["Rune Bulk", 0.05, "x", 2], ["Rune Speed", 0.05, "x", 4], ["Rune Luck", 0.01, "x", 2.5]] },
+  }},
+  Stardust: { color: "#aa80dd", runes: {
+    "Stardust Core": { rarity: "Basic", order: 1, chance: 1, color: "#aaaaaa", boosts: [["Stardust", 0.001, "x", 2], ["Rune Speed", 0.001, "x", 1]] },
+    "Stardust Shard": { rarity: "Basic", order: 2, chance: 50000000, color: "#5082c8", boosts: [["Stardust", 0.005, "x", 3], ["Luck", 0.005, "x", 500]] },
+    "Stardust Relic": { rarity: "Basic", order: 3, chance: 25000000000000, color: "#5ac8dc", boosts: [["Stardust", 0.005, "x", 4.5], ["Luck", 0.03, "x", 8000], ["Fire", 0.01, "x", 5]] },
+    "Stardust Fragment": { rarity: "Basic", order: 4, chance: 15000000000000000000, color: "#6e46aa", boosts: [["Stardust", 0.001, "x", 6], ["Luck", 0.05, "x", 100000], ["Frost", 0.01, "x", 2.5]] },
+    "Stardust Sigil": { rarity: "Rare", order: 5, chance: 2.5e23, color: "#c83cc8", boosts: [["Stardust", 0.0025, "x", 6], ["Luck", 0.2, "x", 900000], ["Snowflakes", 0.01, "x", 4]] },
+    "Stardust Ember": { rarity: "Rare", order: 6, chance: 2.5e26, color: "#ff78c8", boosts: [["Stardust", 0.0025, "x", 6], ["Luck", 1, "x", 20000000], ["Snow", 0.01, "x", 3]] },
+    "Stardust Nexus": { rarity: "Secret", order: 7, chance: 1.5e32, color: "#783cff", boosts: [["Stardust", 0.0025, "x", 7.5], ["Luck", 5, "x", 5000000000], ["Plasma", 0.01, "x", 2]] },
+    "Stardust Essence": { rarity: "Prestigious", order: 8, chance: 5e36, color: "#f5f5ff", boosts: [["Stardust", 0.001, "x", 8], ["Luck", 2, "x", 5000000000], ["Comets", 0.00001, "x", 2]] },
+    "Stardust Remnant": { rarity: "Prestigious", order: 9, chance: 1e40, color: "#f5f5ff", boosts: [["Luck", 1000, "x", 1000000000], ["XP", 1000000000000, "x", 100000000000000000], ["Stardust", 0.001, "x", 5], ["Comets", 0.0001, "x", 5]] },
+  }},
+  Comets: { color: "#9b5fff", runes: {
+    "Cosmic Frost": { rarity: "Basic", order: 1, chance: 1, color: "#e6d9ff", boosts: [["Comets", 0.001, "x", 3]] },
+    "Stellar Ice": { rarity: "Basic", order: 2, chance: 50000000, color: "#bfa6ff", boosts: [["Comets", 0.002, "x", 6], ["Luck", 1000000, "x", 1e20]] },
+    "Orbital Debris": { rarity: "Basic", order: 3, chance: 150000000000000, color: "#9c8ac6", boosts: [["Comets", 0.003, "x", 5], ["Luck", 1000000, "x", 1e23], ["Stardust", 0.003, "x", 2.5]] },
+    "Drift Fragment": { rarity: "Basic", order: 4, chance: 1e33, color: "#6b4fa3", boosts: [["Comets", 0.004, "x", 6], ["Luck", 10000000, "x", 1e25]] },
+    "Velocity Mark": { rarity: "Rare", order: 5, chance: 1e38, color: "#8f5cff", boosts: [["Comets", 0.005, "x", 7], ["Luck", 100000000, "x", 1e26], ["Meteors", 0.005, "x", 7]] },
+    "Atmospheric Burn": { rarity: "Rare", order: 6, chance: 1e44, color: "#ff8fea", boosts: [["Comets", 0.005, "x", 8], ["Luck", 1000000000000000, "x", 1e28]] },
+    "Impact Horizon": { rarity: "Secret", order: 7, chance: 1e65, color: "#e3b7ff", boosts: [["Meteors", 0.005, "x", 10], ["Comets", 0.005, "x", 10], ["Stardust", 0.005, "x", 10]] },
+    "Extinction Core": { rarity: "Prestigious", order: 8, chance: 1e72, color: "#ffffff", boosts: [["Comets", 0.005, "x", 10], ["Luck", 250, "x", 1250], ["Meteors", 0.005, "x", 10], ["Stardust", 0.05, "x", 50]] },
+    "Astral Flux": { rarity: "Prestigious", order: 9, chance: 2.5e83, color: "#9b5fff", boosts: [["Luck", 1000000000000, "x", 1e40], ["Rune Bulk", 1e-7, "x", 3], ["Rune Speed", 1e-9, "x", 3], ["Rune Luck", 1e-12, "x", 3]] },
+  }},
+  Meteors: { color: "#c9b2ff", runes: {
+    "Iron Fragment": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Luck", 0.002, "x", 3], ["Meteors", 0.002, "x", 3]] },
+    "Molten Stone": { rarity: "Basic", order: 2, chance: 10000000000, color: "#919191", boosts: [["Luck", 0.005, "x", 5], ["Meteors", 0.002, "x", 3]] },
+    "Crater Dust": { rarity: "Basic", order: 3, chance: 1e19, color: "#c9b2ff", boosts: [["Luck", 1000000, "x", 1e19], ["Meteors", 0.002, "x", 3], ["Singularity", 0.002, "x", 0.25]] },
+    "Scorched Trail": { rarity: "Basic", order: 4, chance: 1e23, color: "#f01eff", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 1e21]] },
+    "Blazing Core": { rarity: "Rare", order: 5, chance: 1e30, color: "#1ee1ff", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 9]] },
+    "Fireball Spark": { rarity: "Rare", order: 6, chance: 1e36, color: "#ff8fea", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 1e26]] },
+    "Shockwave Echo": { rarity: "Secret", order: 7, chance: 1e50, color: "#e3b7ff", boosts: [["Luck", 1000000, "x", 1e28], ["Meteors", 0.002, "x", 3]] },
+    "Cataclysm Shard": { rarity: "Prestigious", order: 8, chance: 1e63, color: "#ffffff", boosts: [["Singularity", 0.002, "x", 1.25], ["Luck", 1000000000, "x", 1e30]] },
+    "Cosmic Ember": { rarity: "Prestigious", order: 9, chance: 2.5e83, color: "#9b5fff", boosts: [["Meteors", 1, "x", 15], ["Singularity", 1, "x", 15], ["Luck", 1000000000000, "x", 1e30]] },
+  }},
+  Ash: { color: "#e6d9ff", runes: {
+    "Ash Fleck": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Luck", 0.002, "x", 1e19], ["Ash", 0.001, "x", 0.4]] },
+    "Pumice Stone": { rarity: "Basic", order: 2, chance: 1e19, color: "#919191", boosts: [["Luck", 0.005, "x", 1e20], ["Ash", 0.002, "x", 0.5]] },
+    "Cinder Dust": { rarity: "Basic", order: 3, chance: 2.5e20, color: "#c9b2ff", boosts: [["Luck", 1000000, "x", 1e25], ["Ash", 0.004, "x", 0.8], ["Lava", 0.001, "x", 0.1]] },
+    "Soot Trail": { rarity: "Basic", order: 4, chance: 3e25, color: "#f01eff", boosts: [["Luck", 10000000, "x", 1e28], ["Ash", 0.008, "x", 1.5], ["Lava", 0.0025, "x", 0.15625]] },
+    "Volcanic Core": { rarity: "Rare", order: 5, chance: 1e31, color: "#1ee1ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Ash", 0.01, "x", 2], ["Lava", 0.005, "x", 0.3125], ["Rune Speed", 0.0001, "x", 2]] },
+    "Ashfall Remnant": { rarity: "Rare", order: 6, chance: 2.5e38, color: "#ff8fea", boosts: [["Luck", 100000000000, "x", 1e34], ["Ash", 0.001, "x", 5], ["Lava", 0.001, "x", 0.5], ["Rune Luck", 1e-7, "x", 0.9]] },
+    "Smoldering Wraith": { rarity: "Secret", order: 7, chance: 1e54, color: "#e3b7ff", boosts: [["Luck", 10000000000, "x", 1e28], ["Ash", 0.02, "x", 3.5], ["Lava", 0.05, "x", 2], ["Rune Bulk", 0.1, "x", 3]] },
+    Ignimbrite: { rarity: "Prestigious", order: 8, chance: 1e56, color: "#ffffff", boosts: [["Luck", 10000000000, "x", 1e28], ["Ash", 0.02, "x", 7], ["Lava", 0.05, "x", 4], ["Passive Luck", 0.05, "x", 1]] },
+  }},
+  Lava: { color: "#ff4422", runes: {
+    "Magma Droplet": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Lava", 0.001, "x", 0.5], ["Damage", 0.01, "x", 0.125]] },
+    "Obsidian Chip": { rarity: "Basic", order: 2, chance: 1e20, color: "#919191", boosts: [["Lava", 0.005, "x", 0.15625], ["Damage", 0.005, "x", 0.15625], ["Spirit Orbs", 0.002, "x", 0.09375], ["Rune Bulk", 0.002, "x", 2]] },
+    "Pyroclast Dust": { rarity: "Basic", order: 3, chance: 1e25, color: "#c9b2ff", boosts: [["Lava", 0.001, "x", 2], ["Spirit Orbs", 0.002, "x", 0.5], ["Passive Luck", 0.0005, "x", 0.125], ["Rune Bulk", 0.002, "x", 3]] },
+    "Molten Trail": { rarity: "Basic", order: 4, chance: 1e32, color: "#f01eff", boosts: [["Damage", 0.005, "x", 0.15625], ["Spirit Orbs", 0.005, "x", 0.09375], ["Rune Bulk", 0.02, "x", 2]] },
+  }},
+};
+
+const RARITY_COLORS = { Basic: "#6a7590", Rare: "#ff4466", Secret: "#be8cff", Prestigious: "#ffaa22" };
+
+const SUFFIXES = [
+  [1e303, "Ce"],[1e72, "TVt"],[1e69, "DVt"],[1e66, "UVt"],[1e63, "Vt"],
+  [1e60, "NoDe"],[1e57, "OcDe"],[1e54, "SpDe"],[1e51, "SxDe"],
+  [1e48, "QnDe"],[1e45, "QdDe"],[1e42, "TDe"],[1e39, "DDe"],
+  [1e36, "UDe"],[1e33, "De"],[1e30, "No"],[1e27, "Oc"],
+  [1e24, "Sp"],[1e21, "Sx"],[1e18, "Qn"],[1e15, "Qd"],
+  [1e12, "T"],[1e9, "B"],[1e6, "M"],[1e3, "K"],
+];
+
+const SUFFIX_MAP = {};
+SUFFIXES.forEach(([val, suf]) => { SUFFIX_MAP[suf.toLowerCase()] = val; });
+
+function parseSuffixNumber(str) {
+  if (!str || str.trim() === "") return 0;
+  str = str.trim();
+  const num = parseFloat(str);
+  if (!isNaN(num) && /^[\d.eE+\-]+$/.test(str)) return num;
+  const match = str.match(/^([\d.eE+\-]+)\s*([a-zA-Z]+)$/);
+  if (match) {
+    const val = parseFloat(match[1]);
+    const suf = match[2].toLowerCase();
+    if (SUFFIX_MAP[suf] !== undefined) return val * SUFFIX_MAP[suf];
+  }
+  return NaN;
+}
+
+function formatNumber(n) {
+  if (n === 0) return "0";
+  const abs = Math.abs(n);
+  if (abs < 0.0001) return n.toExponential(4);
+  if (abs < 1000) return parseFloat(n.toFixed(6)).toString();
+  if (abs < 1e6) return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  for (const [threshold, suf] of SUFFIXES) {
+    if (abs >= threshold) return (n / threshold).toFixed(2).replace(/\.?0+$/, "") + suf;
+  }
+  return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function formatChance(n) {
+  if (n === 1) return "Common";
+  if (n >= 1e6) {
+    for (const [threshold, suf] of SUFFIXES) {
+      if (n >= threshold) return `1/${(n / threshold).toFixed(1).replace(/\.?0+$/, "")}${suf}`;
+    }
+  }
+  return `1/${n.toLocaleString("en-US")}`;
+}
+
+function formatTime(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return "Never";
+  if (seconds < 60) return `${Math.ceil(seconds)}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  if (seconds < 86400 * 365) return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
+  const years = seconds / (86400 * 365);
+  if (years < 1000) return `${years.toFixed(1)} years`;
+  return `${formatNumber(years)} years`;
+}
+
+function getCapMultipliers(reborn, challenge, frostLevel) {
+  let basicCap = 1;
+  if (reborn >= 3) basicCap *= 2;
+  if (reborn >= 5) basicCap *= 2;
+  if (reborn >= 6) basicCap *= 2;
+  let rareCap = 1;
+  if (reborn >= 5) rareCap *= 2;
+  if (reborn >= 6) rareCap *= 2;
+  let allRunes = 1 + frostLevel / 75;
+  if (challenge >= 4) allRunes *= 2;
+  return { basicCap, rareCap, allRunes };
+}
+
+function getEffectiveCapMult(rarity, mults) {
+  if (rarity === "Basic") return mults.basicCap * mults.allRunes;
+  if (rarity === "Rare") return mults.rareCap * mults.allRunes;
+  return mults.allRunes;
+}
+
+function calcSingleBoostValue(count, per, op, effectiveCap) {
+  let raw = count * per;
+  if (effectiveCap && effectiveCap - 1 < raw) raw = effectiveCap - 1;
+  if (op === "+x") return raw;
+  return raw + 1;
+}
+
+function calculateBoost(rune, amount, capMult) {
+  const results = [];
+  for (const boost of rune.boosts) {
+    const [stat, per, op, baseCap] = boost;
+    const effectiveCap = baseCap * capMult;
+    let raw = amount * per;
+    if (effectiveCap && effectiveCap - 1 < raw) raw = effectiveCap - 1;
+    const maxAmount = per > 0 ? Math.ceil((effectiveCap - 1) / per) : Infinity;
+    let displayValue = op === "+x" ? `+${formatNumber(raw)}x` : `${formatNumber(raw + 1)}x`;
+    const cappedPercent = Math.min(100, per > 0 ? (amount / maxAmount) * 100 : 0);
+    results.push({ stat, per, op, baseCap, effectiveCap, raw, displayValue, maxAmount, cappedPercent, isCapped: amount >= maxAmount });
+  }
+  return results;
+}
+
+// ============================================================
+// TIME TO MAX CALCULATION
+// ============================================================
+
+function calculateTimeToMax(params) {
+  const { rune, chance, currentCount, baseRPS, baseLuck, capMult } = params;
+  const THIRTY_DAYS = 30 * 86400;
+
+  // Build the three feedback boost channels
+  // Every rune implicitly has all three; if not present, per=0 and it stays at 1x
+  const feedbackChannels = { bulk: null, luck: null, speed: null };
+  for (const boost of rune.boosts) {
+    const [stat, per, op, baseCap] = boost;
+    if (stat === "Rune Bulk" && per > 0) feedbackChannels.bulk = { per, effectiveCap: baseCap * capMult };
+    if (stat === "Rune Luck" && per > 0) feedbackChannels.luck = { per, effectiveCap: baseCap * capMult };
+    if (stat === "Rune Speed" && per > 0) feedbackChannels.speed = { per, effectiveCap: baseCap * capMult };
+  }
+
+  // Collect active feedback boosts (per > 0)
+  const feedbackBoosts = [];
+  for (const [key, val] of Object.entries(feedbackChannels)) {
+    if (val) feedbackBoosts.push({ ...val, key });
+  }
+
+  // Factor out current boost to get baseRate
+  let currentMult = 1;
+  for (const fb of feedbackBoosts) {
+    let raw = currentCount * fb.per;
+    if (fb.effectiveCap - 1 < raw) raw = fb.effectiveCap - 1;
+    currentMult *= (raw + 1);
+  }
+
+  // baseRate = rate with all feedback boosts at 1x
+  // RPS includes bulk & speed boosts, luck includes luck boost
+  // We divide out everything to get the "naked" rate
+  const baseRate = (baseRPS * (1 / chance) * baseLuck) / currentMult;
+
+  // Helper: compute time from countA to countB using integration
+  function computeTime(countA, countB) {
+    if (countA >= countB) return 0;
+
+    // Find all cap points within [countA, countB)
+    const capPoints = [];
+    for (const fb of feedbackBoosts) {
+      const capCount = Math.ceil((fb.effectiveCap - 1) / fb.per);
+      if (capCount > countA && capCount < countB) {
+        capPoints.push(capCount);
+      }
+    }
+    // Deduplicate and sort
+    const uniqueCapPoints = [...new Set(capPoints)].sort((a, b) => a - b);
+    const segments = [countA, ...uniqueCapPoints, countB];
+    let totalTime = 0;
+
+    for (let s = 0; s < segments.length - 1; s++) {
+      const segA = segments[s];
+      const segB = segments[s + 1];
+
+      // Partition boosts into capped vs growing in this segment
+      let constantMult = 1;
+      const growingPers = [];
+
+      for (const fb of feedbackBoosts) {
+        const capCount = Math.ceil((fb.effectiveCap - 1) / fb.per);
+        if (segA >= capCount) {
+          constantMult *= fb.effectiveCap;
+        } else {
+          growingPers.push(fb.per);
+        }
+      }
+
+      const R = baseRate * constantMult;
+
+      if (growingPers.length === 0) {
+        // All capped — constant rate
+        totalTime += (segB - segA) / R;
+
+      } else if (growingPers.length === 1) {
+        // ∫ 1/(R·(np+1)) dn = (1/Rp)·ln((Ap+1)/(Bp+1))
+        const p = growingPers[0];
+        totalTime += (1 / (R * p)) * Math.log((segA * p + 1) / (segB * p + 1)) * -1;
+        // Simplified: (1/(R*p)) * ln((segB*p+1)/(segA*p+1))
+        // Which equals: (1/(R*p)) * [ln(segB*p+1) - ln(segA*p+1)]
+
+      } else if (growingPers.length === 2 && growingPers[0] === growingPers[1]) {
+        // ∫ 1/(R·(np+1)²) dn = -1/(Rp·(np+1)) evaluated A to B
+        const p = growingPers[0];
+        totalTime += (1 / (R * p)) * (1 / (segA * p + 1) - 1 / (segB * p + 1));
+
+      } else if (growingPers.length === 2 && growingPers[0] !== growingPers[1]) {
+        // Partial fractions: ∫ 1/(R·(np₁+1)(np₂+1)) dn
+        // = 1/(R·(p₁-p₂)) · ln((np₁+1)/(np₂+1)) evaluated A to B
+        const p1 = growingPers[0];
+        const p2 = growingPers[1];
+        const atB = Math.log((segB * p1 + 1) / (segB * p2 + 1));
+        const atA = Math.log((segA * p1 + 1) / (segA * p2 + 1));
+        totalTime += (1 / (R * (p1 - p2))) * (atB - atA);
+
+      } else if (growingPers.length === 3) {
+        // Three growing boosts — check for matching pairs
+        const [p1, p2, p3] = growingPers;
+        if (p1 === p2 && p2 === p3) {
+          // All same: ∫ 1/(R·(np+1)³) dn = -1/(2Rp·(np+1)²) evaluated A to B
+          const p = p1;
+          totalTime += (1 / (2 * R * p)) * (1 / (segA * p + 1) ** 2 - 1 / (segB * p + 1) ** 2);
+        } else if (p1 === p2) {
+          // Two same + one different: ∫ 1/(R·(np₁+1)²·(np₃+1)) dn
+          // Partial fractions, then integrate
+          // Use numerical for safety
+          totalTime += simpsonIntegrate(R, growingPers, segA, segB);
+        } else {
+          // All different or other combos — numerical
+          totalTime += simpsonIntegrate(R, growingPers, segA, segB);
+        }
+      } else {
+        // Fallback: numerical
+        totalTime += simpsonIntegrate(R, growingPers, segA, segB);
+      }
+    }
+
+    return totalTime;
+  }
+
+  function simpsonIntegrate(R, pers, a, b) {
+    const n = 2000;
+    const h = (b - a) / n;
+    let sum = 0;
+    for (let i = 0; i <= n; i++) {
+      const c = a + i * h;
+      let mult = 1;
+      for (const p of pers) {
+        mult *= (c * p + 1);
+      }
+      const weight = i === 0 || i === n ? 1 : i % 2 === 0 ? 2 : 4;
+      sum += weight / (R * mult);
+    }
+    return (h / 3) * sum;
+  }
+
+  // Calculate time for each stat
+  const statTimes = [];
+  let practicalTime = 0;
+  let practicalMaxCount = 0;
+
+  for (const boost of rune.boosts) {
+    const [stat, per, , baseCap] = boost;
+    const effectiveCap = baseCap * capMult;
+    const maxForThis = per > 0 ? Math.ceil((effectiveCap - 1) / per) : 0;
+
+    if (maxForThis > 0) {
+      const alreadyMaxed = currentCount >= maxForThis;
+      let time = 0;
+      if (!alreadyMaxed) {
+        time = computeTime(currentCount, maxForThis);
+      }
+      const excluded = !alreadyMaxed && time > THIRTY_DAYS;
+
+      statTimes.push({ stat, maxCount: maxForThis, time, excluded, alreadyMaxed });
+
+      if (!excluded && !alreadyMaxed) {
+        practicalTime = Math.max(practicalTime, time);
+        practicalMaxCount = Math.max(practicalMaxCount, maxForThis);
+      }
+    }
+  }
+
+  // If everything is excluded, use the shortest
+  if (practicalMaxCount === 0 && statTimes.length > 0) {
+    const shortest = statTimes.filter(s => !s.alreadyMaxed).sort((a, b) => a.time - b.time)[0];
+    if (shortest) {
+      practicalTime = shortest.time;
+      practicalMaxCount = shortest.maxCount;
+    }
+  }
+
+  // Current rate for display
+  const currentRate = baseRate * currentMult;
+
+  // Compute hourly rate projection
+  // We step forward in 1-hour increments, tracking count and rate
+  const hourlyRates = [];
+  const maxHours = Math.min(Math.ceil(practicalTime / 3600), 48); // cap at 48 hours
+  
+  if (practicalTime > 0 && maxHours > 0) {
+    let simCount = currentCount;
+    let simTime = 0;
+    const hourStep = 3600; // 1 hour in seconds
+
+    for (let h = 0; h <= maxHours; h++) {
+      // Rate at current simCount
+      let mult = 1;
+      for (const fb of feedbackBoosts) {
+        let raw = simCount * fb.per;
+        if (fb.effectiveCap - 1 < raw) raw = fb.effectiveCap - 1;
+        mult *= (raw + 1);
+      }
+      const rateAtCount = baseRate * mult;
+      hourlyRates.push({ hour: h, count: Math.floor(simCount), rate: rateAtCount });
+
+      if (h < maxHours) {
+        // Advance 1 hour: how many runes gained?
+        // For small steps, rate * dt is a good approximation
+        // But for accuracy, use the integral inverse
+        // Simple approach: use average of rate at start and estimated end
+        const runesThisHour = rateAtCount * hourStep;
+        simCount = Math.min(simCount + runesThisHour, practicalMaxCount);
+        simTime += hourStep;
+        if (simCount >= practicalMaxCount) break;
+      }
+    }
+  }
+
+  statTimes.sort((a, b) => a.time - b.time);
+
+  return {
+    time: practicalTime,
+    maxCount: practicalMaxCount,
+    targetPerSec: currentRate,
+    statTimes,
+    hourlyRates,
+  };
+}
+// ============================================================
+// STYLES
+// ============================================================
+
+const css = {
+  bg: "#0a0c10", surface: "#12151c", surface2: "#1a1e28",
+  border: "#2a3040", borderGlow: "#3a4a6a",
+  text: "#c8d0e0", textDim: "#6a7590", textBright: "#e8edf8",
+  accent: "#20b0ff", accentDim: "#20b0ff33",
+  red: "#ff4466", yellow: "#ffaa22", yellowDim: "#ffaa2233",
+};
+
+const panelStyle = {
+  background: css.surface, border: `1px solid ${css.border}`,
+  borderRadius: 10, padding: "24px", marginBottom: 16,
+  position: "relative", overflow: "hidden",
+};
+const panelGlow = {
+  position: "absolute", top: 0, left: 0, right: 0, height: 1,
+  background: `linear-gradient(90deg, transparent, ${css.borderGlow}, transparent)`,
+};
+const panelTitleStyle = {
+  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+  letterSpacing: "2px", textTransform: "uppercase",
+  color: css.textDim, marginBottom: 16,
+};
+const labelStyle = {
+  display: "block", fontSize: 12, color: css.textDim,
+  marginBottom: 6, fontFamily: "'JetBrains Mono', monospace",
+};
+const inputStyle = {
+  width: "100%", background: css.bg, border: `1px solid ${css.border}`,
+  borderRadius: 6, padding: "12px 14px",
+  fontFamily: "'JetBrains Mono', monospace", fontSize: 16,
+  color: css.textBright, outline: "none", boxSizing: "border-box",
+};
+
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+function BoostCalculator({ capMults }) {
+  const [selectedPack, setSelectedPack] = useState("1M Event");
+  const [selectedRune, setSelectedRune] = useState("1M Noob");
+  const [amount, setAmount] = useState("1");
+
+  const pack = RUNE_PACKS[selectedPack];
+  const rune = pack?.runes[selectedRune];
+  const effectiveCapMult = useMemo(() => rune ? getEffectiveCapMult(rune.rarity, capMults) : 1, [rune, capMults]);
+  const sortedRunes = useMemo(() => pack ? Object.entries(pack.runes).sort((a, b) => a[1].order - b[1].order) : [], [pack]);
+  const parsedAmount = parseSuffixNumber(amount) || 0;
+  const boosts = useMemo(() => rune ? calculateBoost(rune, parsedAmount, effectiveCapMult) : [], [rune, parsedAmount, effectiveCapMult]);
+
+  const handlePackChange = (name) => {
+    setSelectedPack(name);
+    const first = Object.entries(RUNE_PACKS[name].runes).sort((a, b) => a[1].order - b[1].order)[0][0];
+    setSelectedRune(first);
+  };
+
+  const levelButton = (level, current, accentColor) => ({
+    width: 30, height: 30, borderRadius: 6,
+    border: `1px solid ${current === level ? accentColor + "60" : css.border}`,
+    background: current === level ? accentColor + "20" : css.bg,
+    color: current === level ? accentColor : css.textDim,
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+    fontWeight: current === level ? 700 : 400,
+    cursor: "pointer", padding: 0,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  });
+
+  return (
+    <>
+      {/* Pack selector */}
+      {[
+        { label: "Events", packs: ["1M Event"] },
+        { label: "Robux", packs: ["Premium", "Global"] },
+        { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
+      ].map((group) => (
+        <div key={group.label} style={{ marginBottom: 12 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: css.textDim, marginBottom: 6 }}>{group.label}</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {group.packs.map((name) => {
+              const data = RUNE_PACKS[name]; if (!data) return null;
+              return (<button key={name} onClick={() => handlePackChange(name)} style={{ padding: "8px 14px", borderRadius: 8, whiteSpace: "nowrap", border: `1px solid ${selectedPack === name ? data.color + "60" : css.border}`, background: selectedPack === name ? data.color + "18" : css.surface, cursor: "pointer", fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, fontWeight: selectedPack === name ? 700 : 500, color: selectedPack === name ? data.color : css.textDim }}>{name}</button>);
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Rune selector */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 20 }}>
+        {sortedRunes.map(([name, data]) => {
+          const sel = name === selectedRune;
+          return (<button key={name} onClick={() => setSelectedRune(name)} style={{ background: sel ? data.color + "18" : css.surface, border: `1px solid ${sel ? data.color + "60" : css.border}`, borderRadius: 8, padding: "10px 6px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s ease" }}>
+            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 11, fontWeight: sel ? 700 : 500, color: sel ? data.color : css.text, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[data.rarity], fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{data.rarity}</span>
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>{formatChance(data.chance)}</span>
+          </button>);
+        })}
+      </div>
+
+      {/* Input */}
+      <div style={panelStyle}>
+        <div style={panelGlow} />
+        <label style={labelStyle}>Rune Count (supports suffixes like 1B, 3.5De)</label>
+        <input type="text" value={amount} onChange={(e) => setAmount(e.target.value)} style={inputStyle} placeholder="e.g. 64350 or 1.5B" />
+      </div>
+
+      {/* Header */}
+      {rune && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, padding: "14px 18px", background: rune.color + "10", border: `1px solid ${rune.color}30`, borderRadius: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: rune.color, boxShadow: `0 0 12px ${rune.color}80`, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 17, fontWeight: 700, color: rune.color }}>{selectedRune}</span>
+            <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[rune.rarity], marginLeft: 10, fontWeight: 600, letterSpacing: "1px" }}>{rune.rarity.toUpperCase()}</span>
+            {boosts.length > 0 && (() => {
+              const max = Math.max(...boosts.map(b => b.maxAmount === Infinity ? 0 : b.maxAmount));
+              return max > 0 ? <span style={{ fontSize: 10, color: css.textDim, marginLeft: 10, fontFamily: "'JetBrains Mono', monospace" }}>max all at {formatNumber(max)}</span> : null;
+            })()}
+          </div>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: css.textBright, fontWeight: 600 }}>x{formatNumber(parsedAmount)}</span>
+        </div>
+      )}
+
+      {/* Boosts */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {boosts.map((b, i) => (
+          <div key={i} style={{ ...panelStyle, marginBottom: 0, padding: "16px 18px" }}>
+            <div style={panelGlow} />
+            <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${b.cappedPercent}%`, background: b.isCapped ? css.yellowDim : rune.color + "10", transition: "width 0.3s ease", borderRadius: 10 }} />
+            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 14, fontWeight: 600, color: css.textBright }}>{b.stat}</span>
+                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, padding: "2px 6px", background: css.bg, borderRadius: 4, border: `1px solid ${css.border}` }}>{b.op === "+x" ? "ADDITIVE" : "MULTIPLY"}</span>
+                {b.isCapped && <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.yellow, fontWeight: 700, padding: "2px 6px", background: css.yellowDim, borderRadius: 4 }}>CAPPED</span>}
+              </div>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: b.isCapped ? css.yellow : rune.color }}>{b.displayValue}</span>
+            </div>
+            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>
+              <span>{formatNumber(b.per)}/rune · cap {formatNumber(b.effectiveCap)}</span>
+              <span>max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function TimeToMaxCalculator({ capMults }) {
+  const [selectedPack, setSelectedPack] = useState("1M Event");
+  const [selectedRune, setSelectedRune] = useState("1M Absolute");
+  const [currentCount, setCurrentCount] = useState("0");
+  const [rpsInput, setRpsInput] = useState("");
+  const [luckInput, setLuckInput] = useState("");
+  const [result, setResult] = useState(null);
+
+  const pack = RUNE_PACKS[selectedPack];
+  const rune = pack?.runes[selectedRune];
+  const sortedRunes = useMemo(() => pack ? Object.entries(pack.runes).sort((a, b) => a[1].order - b[1].order) : [], [pack]);
+
+  const handlePackChange = (name) => {
+    setSelectedPack(name);
+    const sorted = Object.entries(RUNE_PACKS[name].runes).sort((a, b) => a[1].order - b[1].order);
+    setSelectedRune(sorted[sorted.length - 1][0]); // default to rarest
+    setResult(null);
+  };
+
+  const handleCalculate = useCallback(() => {
+    if (!rune) return;
+    const rps = parseSuffixNumber(rpsInput);
+    const luck = parseSuffixNumber(luckInput);
+    const count = parseSuffixNumber(currentCount) || 0;
+    if (isNaN(rps) || isNaN(luck) || rps <= 0 || luck <= 0) return;
+
+    const effectiveCapMult = getEffectiveCapMult(rune.rarity, capMults);
+    const res = calculateTimeToMax({
+      rune, chance: rune.chance, currentCount: count,
+      baseRPS: rps, baseLuck: luck,
+      capMult: effectiveCapMult,
+    });
+    setResult(res);
+  }, [rune, rpsInput, luckInput, currentCount, capMults, selectedRune, selectedPack]);
+
+  return (
+    <>
+      {/* Pack selector */}
+      {[
+        { label: "Events", packs: ["1M Event"] },
+        { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
+      ].map((group) => (
+        <div key={group.label} style={{ marginBottom: 12 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: css.textDim, marginBottom: 6 }}>{group.label}</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {group.packs.map((name) => {
+              const data = RUNE_PACKS[name]; if (!data) return null;
+              return (<button key={name} onClick={() => handlePackChange(name)} style={{ padding: "8px 14px", borderRadius: 8, whiteSpace: "nowrap", border: `1px solid ${selectedPack === name ? data.color + "60" : css.border}`, background: selectedPack === name ? data.color + "18" : css.surface, cursor: "pointer", fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, fontWeight: selectedPack === name ? 700 : 500, color: selectedPack === name ? data.color : css.textDim }}>{name}</button>);
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Rune selector */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 20 }}>
+        {sortedRunes.map(([name, data]) => {
+          const sel = name === selectedRune;
+          return (<button key={name} onClick={() => { setSelectedRune(name); setResult(null); }} style={{ background: sel ? data.color + "18" : css.surface, border: `1px solid ${sel ? data.color + "60" : css.border}`, borderRadius: 8, padding: "10px 6px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 11, fontWeight: sel ? 700 : 500, color: sel ? data.color : css.text, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[data.rarity], fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{data.rarity}</span>
+          </button>);
+        })}
+      </div>
+
+      {/* Inputs */}
+      <div style={panelStyle}>
+        <div style={panelGlow} />
+        <div style={panelTitleStyle}>Your Stats</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          <div>
+            <label style={labelStyle}>Rolls Per Second (RPS)</label>
+            <input type="text" value={rpsInput} onChange={(e) => setRpsInput(e.target.value)} style={inputStyle} placeholder="e.g. 23NoVt or 1B" />
+          </div>
+          <div>
+            <label style={labelStyle}>Rune Luck</label>
+            <input type="text" value={luckInput} onChange={(e) => setLuckInput(e.target.value)} style={inputStyle} placeholder="e.g. 3.3Sx or 2.3e8" />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Current Count</label>
+          <input type="text" value={currentCount} onChange={(e) => setCurrentCount(e.target.value)} style={inputStyle} placeholder="0" />
+        </div>
+
+        <button onClick={handleCalculate} style={{
+          width: "100%", padding: "14px", borderRadius: 8,
+          background: `linear-gradient(135deg, ${css.accent}, #1088cc)`,
+          border: "none", cursor: "pointer",
+          fontFamily: "'Chakra Petch', sans-serif", fontSize: 16,
+          fontWeight: 700, color: "#000", letterSpacing: "1px",
+        }}>CALCULATE TIME TO MAX</button>
+      </div>
+
+      {/* Results */}
+      {result && rune && (
+        <div style={panelStyle}>
+          <div style={panelGlow} />
+          <div style={panelTitleStyle}>Results — {selectedRune}</div>
+
+          <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>TIME TO MAX</div>
+              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Chakra Petch', sans-serif", color: result.time === 0 ? css.accent : result.time > 86400 * 365 * 100 ? css.red : css.textBright }}>
+                {result.time === 0 ? "Already maxed!" : formatTime(result.time)}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>TARGET COUNT</div>
+              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Chakra Petch', sans-serif", color: rune.color }}>
+                {formatNumber(result.maxCount)}
+              </div>
+            </div>
+          </div>
+
+          {/* Per-stat time breakdown */}
+          {result.statTimes && result.statTimes.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 8, letterSpacing: "1px" }}>STAT COMPLETION</div>
+              {result.statTimes.map((st, i) => (
+                <div key={i} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "8px 12px", marginBottom: 4,
+                  background: st.alreadyMaxed ? css.accentDim : css.bg,
+                  borderRadius: 6, border: `1px solid ${st.alreadyMaxed ? css.accent + "40" : css.border}`,
+                  opacity: st.excluded ? 0.5 : 1,
+                }}>
+                  <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, color: st.alreadyMaxed ? css.accent : css.textBright, fontWeight: 600, minWidth: 120 }}>
+                    {st.stat}
+                  </span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim }}>
+                    {formatNumber(st.maxCount)} runes
+                  </span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: st.alreadyMaxed ? css.accent : st.excluded ? css.textDim : css.textBright, fontWeight: 600 }}>
+                    {st.alreadyMaxed ? "Maxed" : st.excluded ? ">30 days" : formatTime(st.time)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Rate info */}
+          {result.targetPerSec > 0 && (
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, textAlign: "center", marginBottom: 16 }}>
+              Current: {formatNumber(result.targetPerSec)}/sec · {formatNumber(result.targetPerSec * 3600)}/hr
+            </div>
+          )}
+
+          {/* Hourly rate projection */}
+          {result.hourlyRates && result.hourlyRates.length > 1 && result.time > 3600 && (
+            <div>
+              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 8, letterSpacing: "1px" }}>PROJECTED RATE</div>
+              {result.hourlyRates.map((hr, i) => {
+                const isLast = i === result.hourlyRates.length - 1;
+                const prevRate = i > 0 ? result.hourlyRates[i - 1].rate * 3600 : null;
+                const currRateHr = hr.rate * 3600;
+                const acceleration = prevRate ? ((currRateHr - prevRate) / prevRate * 100).toFixed(1) : null;
+                return (
+                  <div key={i} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "6px 12px", marginBottom: 2,
+                    background: css.bg,
+                    borderRadius: 6, border: `1px solid ${css.border}`,
+                  }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim, minWidth: 50 }}>
+                      {hr.hour === 0 ? "Now" : `${hr.hour}h`}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim }}>
+                      {formatNumber(hr.count)} runes
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textBright, fontWeight: 600 }}>
+                      {formatNumber(currRateHr)}/hr
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: acceleration && parseFloat(acceleration) > 0 ? css.accent : css.textDim, minWidth: 55, textAlign: "right" }}>
+                      {acceleration ? `+${acceleration}%` : ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+
+export default function RuneCalculator() {
+  const [tab, setTab] = useState("boost");
+  const [reborn, setReborn] = useState(6);
+  const [challenge, setChallenge] = useState(4);
+  const [frostLevel, setFrostLevel] = useState(75);
+
+  const capMults = useMemo(() => getCapMultipliers(reborn, challenge, frostLevel), [reborn, challenge, frostLevel]);
+
+  const tabs = [
+    { id: "boost", label: "Boost Calc", icon: "" },
+    { id: "time", label: "Time to Max", icon: "" },
+  ];
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = [
+    { label: "Rune Calculator", href: null, active: true },
+    { label: "Rare Rune Calc", href: "https://pric3l3ss1.github.io/OmegaRarities2/RareRuneCalc/", active: false },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: css.bg, color: css.text, fontFamily: "'Chakra Petch', sans-serif", overflow: "auto" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+      {/* Sidebar overlay */}
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          zIndex: 100,
+        }} />
+      )}
+
+      {/* Sidebar */}
+      <div style={{
+        position: "fixed", top: 0, left: sidebarOpen ? 0 : -260, bottom: 0,
+        width: 250, background: css.surface, borderRight: `1px solid ${css.border}`,
+        zIndex: 101, transition: "left 0.25s ease",
+        padding: "72px 16px 24px", display: "flex", flexDirection: "column", gap: 8,
+      }}>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+          letterSpacing: "2px", textTransform: "uppercase",
+          color: css.textDim, marginBottom: 12, paddingBottom: 12,
+          borderBottom: `1px solid ${css.border}`,
+        }}>
+          <a href="https://pric3l3ss1.github.io/OmegaRarities2/" style={{ color: css.textDim, textDecoration: "none" }}>
+            OR2 TOOLS
+          </a>
+        </div>
+        {navItems.map((item) => (
+          item.href ? (
+            <a key={item.label} href={item.href} style={{
+              display: "block", padding: "10px 14px", borderRadius: 8,
+              background: css.bg, border: `1px solid ${css.border}`,
+              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
+              fontWeight: 500, color: css.textDim,
+              textDecoration: "none", cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}>{item.label}</a>
+          ) : (
+            <div key={item.label} style={{
+              padding: "10px 14px", borderRadius: 8,
+              background: css.accentDim, border: `1px solid ${css.accent}40`,
+              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
+              fontWeight: 700, color: css.accent,
+            }}>{item.label}</div>
+          )
+        ))}
+      </div>
+
+      {/* Menu button */}
+      <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
+        position: "fixed", top: 16, left: sidebarOpen ? 200 : 16, zIndex: 102,
+        width: 40, height: 40, borderRadius: 8,
+        background: css.surface, border: `1px solid ${css.border}`,
+        cursor: "pointer", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 5,
+        padding: 0, transition: "left 0.25s ease",
+      }}>
+        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
+        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", opacity: sidebarOpen ? 0 : 1 }} />
+        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
+      </button>
+
+      <div style={{ position: "fixed", inset: 0, backgroundImage: `linear-gradient(${css.border} 1px, transparent 1px), linear-gradient(90deg, ${css.border} 1px, transparent 1px)`, backgroundSize: "60px 60px", opacity: 0.08, pointerEvents: "none", zIndex: 0 }} />
+
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 780, margin: "0 auto", padding: "32px 20px 60px" }}>
+
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ marginBottom: 14 }}>
+            <span style={{ display: "inline-block", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "2px", textTransform: "uppercase", color: css.accent, background: css.accentDim, border: `1px solid ${css.accent}`, borderRadius: 4, padding: "4px 12px" }}>OR2 TOOL BY PRICE AND KONAMI</span>
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: css.textBright, letterSpacing: "1px", lineHeight: 1.2, margin: 0 }}>
+            OR2 <span style={{ color: css.accent }}>Rune</span> Calculator
+          </h1>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
+          {tabs.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flex: 1, padding: "12px", borderRadius: 8,
+              border: `1px solid ${tab === t.id ? css.accent + "60" : css.border}`,
+              background: tab === t.id ? css.accentDim : css.surface,
+              cursor: "pointer",
+              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
+              fontWeight: tab === t.id ? 700 : 500,
+              color: tab === t.id ? css.accent : css.textDim,
+              letterSpacing: "0.5px",
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* Progression Settings */}
+        <div style={panelStyle}>
+          <div style={panelGlow} />
+          <div style={panelTitleStyle}>Your Progression</div>
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div>
+              <label style={labelStyle}>Reborn Level</label>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[0, 1, 2, 3, 4, 5, 6].map((level) => (
+                  <button key={level} onClick={() => setReborn(level)} style={{
+                    width: 30, height: 30, borderRadius: 6,
+                    border: `1px solid ${reborn === level ? css.accent + "60" : css.border}`,
+                    background: reborn === level ? css.accent + "20" : css.bg,
+                    color: reborn === level ? css.accent : css.textDim,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                    fontWeight: reborn === level ? 700 : 400, cursor: "pointer", padding: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{level}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Challenge</label>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[0, 1, 2, 3, 4].map((level) => (
+                  <button key={level} onClick={() => setChallenge(level)} style={{
+                    width: 30, height: 30, borderRadius: 6,
+                    border: `1px solid ${challenge === level ? "#ff78c860" : css.border}`,
+                    background: challenge === level ? "#ff78c820" : css.bg,
+                    color: challenge === level ? "#ff78c8" : css.textDim,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                    fontWeight: challenge === level ? 700 : 400, cursor: "pointer", padding: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>{level}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label style={labelStyle}>Frost Upgrade 6</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="range" min={0} max={75} value={frostLevel} onChange={(e) => setFrostLevel(parseInt(e.target.value))} style={{ flex: 1, height: 6, appearance: "none", borderRadius: 3, background: `linear-gradient(to right, ${css.accent} ${(frostLevel / 75) * 100}%, ${css.bg} ${(frostLevel / 75) * 100}%)`, outline: "none", cursor: "pointer" }} />
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: css.accent, minWidth: 28, textAlign: "right" }}>{frostLevel}</span>
+              </div>
+              <span style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace" }}>x{(1 + frostLevel / 75).toFixed(2)} rune caps</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${css.border}` }}>
+            {[
+              { label: "Basic Cap", value: capMults.basicCap * capMults.allRunes },
+              { label: "Rare Cap", value: capMults.rareCap * capMults.allRunes },
+              { label: "Other Cap", value: capMults.allRunes },
+            ].map((item) => (
+              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{item.label}:</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, color: css.textDim }}>x{Number.isInteger(item.value) ? item.value : item.value.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        {tab === "boost" && <BoostCalculator capMults={capMults} />}
+        {tab === "time" && <TimeToMaxCalculator capMults={capMults} />}
+
+        {/* Footer */}
+        <div style={{ marginTop: 32, textAlign: "center", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, lineHeight: 1.8 }}>
+          Caps scale with Reborn level, Challenge tier & Frost Upgrade 6
+        </div>
+      </div>
+    </div>
+  );
+}
