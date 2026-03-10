@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OR2 Tools</title>
+<link rel="icon" type="image/png" href="RuneCalculator/noFilter-removebg-preview.png">
+<meta property="og:title" content="OR2 Tools">
+<meta property="og:description" content="Community tools for Omega Rarities 2 — Rune Calculator, Rare Rune Bulk Finder, and more.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#20b0ff">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: #2a3040;
+    --border-glow: #3a4a6a;
+    --text: #c8d0e0;
+    --text-dim: #6a7590;
+    --text-bright: #e8edf8;
+    --blue: #20b0ff;
+    --blue-dim: #20b0ff22;
+    --blue-glow: #20b0ff44;
+    --green: #00d4aa;
+    --green-dim: #00d4aa22;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse, #20b0ff08 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 80px 24px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 64px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .header .gem {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 0 20px #20b0ff44);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .header .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: 2px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .header h1 span {
+    background: linear-gradient(135deg, #20b0ff, #00d4aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header p {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+
+  /* Tool cards */
+  .tools {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .tool-card {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 28px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .tool-card:nth-child(1) { animation-delay: 0.1s; }
+  .tool-card:nth-child(2) { animation-delay: 0.2s; }
+  .tool-card:nth-child(3) { animation-delay: 0.3s; }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+    transition: background 0.3s;
+  }
+
+  .tool-card:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .tool-card:hover::before {
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+  }
+
+  .tool-card .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .tool-card .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+
+  .tool-card:hover .card-title {
+    color: var(--accent-color);
+  }
+
+  .tool-card .card-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--text-dim);
+    transition: all 0.25s ease;
+  }
+
+  .tool-card:hover .card-arrow {
+    color: var(--accent-color);
+    transform: translateX(4px);
+  }
+
+  .tool-card .card-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .tool-card .card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tool-card .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: var(--tag-bg);
+    color: var(--tag-color);
+    border: 1px solid var(--tag-border);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    animation: fadeUp 0.6s ease both;
+    animation-delay: 0.4s;
+  }
+
+  .footer .credits {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .footer .credits span {
+    color: var(--text);
+  }
+
+  .footer .divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+    margin: 16px auto;
+  }
+
+  .footer .game-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  @media (max-width: 500px) {
+    .header h1 { font-size: 32px; }
+    .tool-card { padding: 22px 20px; }
+    .page { padding: 60px 16px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="RuneCalculator/noFilter-removebg-preview.png" alt="OR2" class="gem">
+    <div class="tag">Tools</div>
+    <h1>OR2 <span>Tools</span></h1>
+    <p>Calculators and utilities for Omega Rarities 2, built by the community.</p>
+  </div>
+
+  <!-- Tool Cards -->
+  <div class="tools">
+
+    <a href="RuneCalculator/" class="tool-card" style="--accent-color: #20b0ff; --tag-bg: #20b0ff15; --tag-color: #20b0ff; --tag-border: #20b0ff33;">
+      <div class="card-top">
+        <span class="card-title">Rune Calculator</span>
+        <span class="card-arrow">-></span>
+      </div>
+      <div class="card-desc">
+        Calculate rune boosts at any count with progression-aware caps. Includes a Time to Max estimator using methods of integration.
+      </div>
+      <div class="card-tags">
+        <span class="card-tag">Boost Calculator</span>
+        <span class="card-tag">Time to Max</span>
+        <span class="card-tag">See all runes</span>
+      </div>
+    </a>
+
+    <a href="RareRuneCalc/" class="tool-card" style="--accent-color: #00d4aa; --tag-bg: #00d4aa15; --tag-color: #00d4aa; --tag-border: #00d4aa33;">
+      <div class="card-top">
+        <span class="card-title">Milestone Calculator</span>
+        <span class="card-arrow">-></span>
+      </div>
+      <div class="card-desc">
+        Find the perfect bulk for 1/50,000 rare rune milestone farming using binary search. Includes tier projections and time estimates.
+      </div>
+      <div class="card-tags">
+        <span class="card-tag">Bulk Finding</span>
+        <span class="card-tag">Tier Projections</span>
+        <span class="card-tag">Milestones</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="credits">Built by <span>Price</span> and <span>Konami</span></div>
+    <div class="divider"></div>
+    <div class="game-name">Omega Rarities 2</div>
+  </div>
+
+</div>
+
+</body>
+</html>
