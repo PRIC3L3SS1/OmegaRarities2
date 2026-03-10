@@ -1,4 +1,24 @@
-import { useState, useMemo, useCallback } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rune Calculator</title>
+  <link rel="icon" type="image/png" href="noFilter-removebg-preview.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0c10; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback } = React;
 
 // ============================================================
 // DATA
@@ -835,7 +855,7 @@ function TimeToMaxCalculator({ capMults }) {
 // MAIN
 // ============================================================
 
-export default function RuneCalculator() {
+function RuneCalculator() {
   const [tab, setTab] = useState("boost");
   const [reborn, setReborn] = useState(6);
   const [challenge, setChallenge] = useState(4);
@@ -852,7 +872,7 @@ export default function RuneCalculator() {
 
   const navItems = [
     { label: "Rune Calculator", href: null, active: true },
-    { label: "Milestone Calculator", href: "https://pric3l3ss1.github.io/OmegaRarities2/MilestoneCalculator/", active: false },
+    { label: "Milestone Calculator", href: "https://pric3l3ss1.github.io/OmegaRarities2/RareRuneCalc/", active: false },
   ];
 
   return (
@@ -1021,3 +1041,8 @@ export default function RuneCalculator() {
     </div>
   );
 }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(RuneCalculator));
+  </script>
+</body>
+</html>
