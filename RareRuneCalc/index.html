@@ -887,9 +887,84 @@
     .current-test .value { font-size: 20px; }
     .input-row { flex-direction: column; }
   }
+  /* Sidebar */
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; display: none;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .sidebar {
+    position: fixed; top: 0; left: -260px; bottom: 0;
+    width: 250px; background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 101; transition: left 0.25s ease;
+    padding: 72px 16px 24px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sidebar.open { left: 0; }
+
+  .sidebar-header {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .sidebar-header a { color: var(--text-dim); text-decoration: none; }
+
+  .sidebar-link {
+    display: block; padding: 10px 14px; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    font-family: 'Chakra Petch', sans-serif; font-size: 14px;
+    font-weight: 500; color: var(--text-dim);
+    text-decoration: none; transition: all 0.15s ease;
+  }
+  .sidebar-link:hover { border-color: var(--accent); color: var(--accent); }
+
+  .sidebar-active {
+    display: block; padding: 10px 14px; border-radius: 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0, 212, 170, 0.25);
+    font-family: 'Chakra Petch', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--accent);
+  }
+
+  .menu-btn {
+    position: fixed; top: 16px; left: 16px; z-index: 102;
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    padding: 0; transition: left 0.25s ease;
+  }
+  .menu-btn.open { left: 200px; }
+
+  .menu-btn .bar {
+    width: 18px; height: 2px; background: var(--text-dim);
+    border-radius: 1px; transition: all 0.2s;
+  }
+  .menu-btn.open .bar:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .menu-btn.open .bar:nth-child(2) { opacity: 0; }
+  .menu-btn.open .bar:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
 </style>
+  
 </head>
 <body>
+<!-- Sidebar Navigation -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a href="https://pric3l3ss1.github.io/OmegaRarities2/">OR2 TOOLS</a>
+  </div>
+  <a href="https://pric3l3ss1.github.io/OmegaRarities2/RuneCalculator/" class="sidebar-link">Rune Calculator</a>
+  <div class="sidebar-active">Rare Rune Calc</div>
+</div>
+<button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+</button>
 <div class="app">
   <!-- Header -->
   <div class="header">
@@ -1593,6 +1668,12 @@ function recalcTime() {
   document.getElementById('timeRate').textContent = clones + ' clone' + (clones !== 1 ? 's' : '') + ' × 1/40s = ' + (runesPerSec * 60).toFixed(1) + '/min';
   document.getElementById('timeEta').textContent = remaining === 0 ? 'Ready to tier up!' : formatDuration(etaSeconds);
 }
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+  document.getElementById('menuBtn').classList.toggle('open');
+}
+  
 </script>
 </body>
 </html>
