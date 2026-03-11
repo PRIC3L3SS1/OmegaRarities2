@@ -418,8 +418,54 @@
   <!-- RARE RUNES TAB -->
   <!-- ============================================================ -->
   <div id="tab-rareRunes">
+
+    <!-- Tutorial Modal -->
+    <div class="hidden" id="tutorialModal" onclick="if(event.target===this)toggleTutorial()" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--surface);border:1px solid var(--border-glow);border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:28px;position:relative;scrollbar-width:thin;scrollbar-color:var(--border) transparent;">
+        <button onclick="toggleTutorial()" style="position:absolute;top:16px;right:16px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:18px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">x</button>
+        <h2 style="font-size:20px;color:var(--text-bright);margin-bottom:16px;">How to Use This Tool</h2>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Before You Start</h3>
+        <ol style="padding-left:20px;font-size:13px;color:var(--text);line-height:1.7;">
+          <li style="margin-bottom:8px;">Go to <span style="color:var(--accent);font-weight:600;">Settings</span> and <span style="color:var(--yellow);font-weight:600;">disable Rune Luck</span>.</li>
+          <li style="margin-bottom:8px;">Set your rune to <span style="color:var(--accent);font-weight:600;">Slime Rune</span> — the rare rune you're farming for is <span style="color:var(--accent);font-weight:600;">Genesis Slime</span>. This method works for most runes, but Slime is the go-to.</li>
+          <li style="margin-bottom:8px;">Go to your <span style="color:var(--accent);font-weight:600;">Profile</span> and find your <span style="color:var(--accent);font-weight:600;">Rune Bulk</span> amount. This is your starting bulk.</li>
+          <li style="margin-bottom:8px;">Enter your starting bulk and your current rare rune milestone tier into the tool.</li>
+        </ol>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">The Search Process</h3>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">We're looking for the exact bulk that produces runes at 1/50,000. This tool uses binary search to find it efficiently.</p>
+        <ol style="padding-left:20px;font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;">
+          <li style="margin-bottom:8px;">Click <span style="color:var(--accent);font-weight:600;">Start Search</span>. The tool will give you a bulk amount to test.</li>
+          <li style="margin-bottom:8px;"><span style="color:var(--accent);font-weight:600;">Copy</span> the bulk value and change your bulk amount to it.</li>
+          <li style="margin-bottom:8px;">Try farming runes for a bit, then report the result:
+            <ul style="margin-top:6px;padding-left:16px;">
+              <li><span style="color:var(--yellow);font-weight:600;">Too Low</span> — You couldn't get the rare rune at all after a minute. Bulk is too small.</li>
+              <li><span style="color:var(--yellow);font-weight:600;">Too High</span> — You got the rare rune, but it didn't count toward your milestone. Bulk is too large.</li>
+              <li><span style="color:var(--accent);font-weight:600;">Perfect</span> — You got the rare rune AND it counted toward your milestone! This is the sweet spot.</li>
+            </ul>
+          </li>
+          <li style="margin-bottom:8px;">Repeat until you find the perfect bulk. A "perfect" bulk means you're getting a rare rune counted towards your milestone every 30-40 seconds.</li>
+        </ol>
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:12px 0;font-size:12px;color:var(--text-dim);line-height:1.6;">
+          <strong style="color:var(--yellow);">Tip:</strong> After hitting "Perfect", you can click "Refine" to narrow it down even further if you want extra precision. The first "Perfect" is usually good enough though.
+        </div>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Tier Projections</h3>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">Once you find your perfect bulk, the tool automatically calculates what your bulk should be for the upcoming tiers. Each milestone tier-up increases your rune speed by 1.13x, so your bulk needs to decrease by the same factor to stay at the sweet spot.</p>
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:12px 0;font-size:12px;color:var(--text-dim);line-height:1.6;">
+          <strong style="color:var(--yellow);">Returning user?</strong> If you already know your bulk, use the "Returning User" section. Enter your known bulk and tier to see the projection table.
+        </div>
+      </div>
+    </div>
+
     <div class="panel">
-      <div class="panel-title">Configuration</div>
+      <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Configuration</span>
+        <button onclick="toggleTutorial()" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;">? How to Use</button>
+      </div>
       <div class="input-row">
         <div class="input-group">
           <label>Starting Bulk Amount</label>
@@ -657,6 +703,17 @@ function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebarOverlay').classList.toggle('open');
   document.getElementById('menuBtn').classList.toggle('open');
+}
+
+function toggleTutorial() {
+  const modal = document.getElementById('tutorialModal');
+  if (modal.classList.contains('hidden')) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  } else {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 function switchTab(tabId) {
