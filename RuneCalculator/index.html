@@ -657,7 +657,7 @@ function BoostCalculator({ capMults }) {
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: b.isCapped ? css.yellow : rune.color }}>{b.displayValue}</span>
             </div>
             <div style={{ position: "relative", display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>
-              <span>{formatNumber(b.per)}/rune · max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
+              <span>+{formatNumber(b.per)}x/rune · max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
               <span>cap {formatNumber(b.effectiveCap)}x</span>
             </div>
           </div>
