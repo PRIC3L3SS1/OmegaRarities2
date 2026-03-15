@@ -43,6 +43,7 @@ const RUNE_PACKS = {
   Leprechaun: {
     color: "#00a86b",
     isEvent: true,
+    noCapMult: true,
     runes: {
       "Emerald Luck Rune": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 3], ["Rune Bulk", 0.0001, "x", 4]] },
       "Clover Fortune": { rarity: "Basic", order: 2, chance: 100, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.002, "x", 5], ["Rune Speed", 0.0001, "x", 4]] },
@@ -56,6 +57,7 @@ const RUNE_PACKS = {
   Ascended: {
     color: "#22b14c",
     isEvent: true,
+    noCapMult: true,
     runes: {
       "1111": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 5], ["Rune Bulk", 0.0001, "x", 2.5]] },
       "2222": { rarity: "Basic", order: 2, chance: 2500, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.005, "x", 5], ["Rune Speed", 0.002, "x", 3], ["Rune Luck", 0.001, "x", 3]] },
@@ -294,7 +296,9 @@ function getCapMultipliers(reborn, challenge, frostLevel) {
   return { basicCap, rareCap, allRunes };
 }
 
-function getEffectiveCapMult(rarity, mults) {
+function getEffectiveCapMult(rarity, mults, isEvent, noCapMult) {
+  if (noCapMult) return 1;
+  if (isEvent) return mults.allRunes;
   if (rarity === "Basic") return mults.basicCap * mults.allRunes;
   if (rarity === "Rare") return mults.rareCap * mults.allRunes;
   return mults.allRunes;
@@ -595,7 +599,7 @@ function BoostCalculator({ capMults }) {
 
   const pack = RUNE_PACKS[selectedPack];
   const rune = pack?.runes[selectedRune];
-  const effectiveCapMult = useMemo(() => rune ? getEffectiveCapMult(rune.rarity, capMults) : 1, [rune, capMults]);
+  const effectiveCapMult = useMemo(() => rune ? getEffectiveCapMult(rune.rarity, capMults, pack?.isEvent, pack?.noCapMult) : 1, [rune, capMults, pack]);
   const sortedRunes = useMemo(() => pack ? Object.entries(pack.runes).sort((a, b) => a[1].order - b[1].order) : [], [pack]);
   const parsedAmount = parseSuffixNumber(amount) || 0;
   const boosts = useMemo(() => rune ? calculateBoost(rune, parsedAmount, effectiveCapMult) : [], [rune, parsedAmount, effectiveCapMult]);
@@ -722,7 +726,7 @@ function TimeToMaxCalculator({ capMults }) {
     const count = parseSuffixNumber(currentCount) || 0;
     if (isNaN(rps) || isNaN(luck) || rps <= 0 || luck <= 0) return;
 
-    const effectiveCapMult = getEffectiveCapMult(rune.rarity, capMults);
+    const effectiveCapMult = getEffectiveCapMult(rune.rarity, capMults, pack?.isEvent, pack?.noCapMult);
     const res = calculateTimeToMax({
       rune, chance: rune.chance, currentCount: count,
       baseRPS: rps, baseLuck: luck,
