@@ -40,6 +40,32 @@ const RUNE_PACKS = {
       "1M Absolute": { rarity: "Prestigious", order: 9, chance: 900000000000000000, color: "#50c8ff", boosts: [["Luck", 100000, "x", 10000000000000000000], ["Singularity", 0.000075, "x", 2], ["Meteors", 0.000065, "x", 2], ["Rune Bulk", 0.000076, "x", 1.7], ["Rune Luck", 0.000076, "x", 1.7], ["Passive Speed", 0.000052, "x", 0.5]] },
     },
   },
+  Leprechaun: {
+    color: "#00a86b",
+    isEvent: true,
+    runes: {
+      "Emerald Luck Rune": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 3], ["Rune Bulk", 0.0001, "x", 4]] },
+      "Clover Fortune": { rarity: "Basic", order: 2, chance: 100, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.002, "x", 5], ["Rune Speed", 0.0001, "x", 4]] },
+      "Leprechaun's Trick": { rarity: "Basic", order: 3, chance: 10000, color: "#ff8c00", boosts: [["Luck", 1000000, "x", 1e25], ["Clovers", 0.005, "x", 10], ["Rune Bulk", 0.0001, "x", 5], ["Rune Luck", 0.0001, "x", 5]] },
+      "Pot of Gold": { rarity: "Basic", order: 4, chance: 100000, color: "#ffd700", boosts: [["Luck", 10000000, "x", 1e28], ["Clovers", 0.001, "x", 12], ["Rune Speed", 0.0005, "x", 5], ["Rune Bulk", 0.0005, "x", 5]] },
+      "Rainbow's End": { rarity: "Rare", order: 5, chance: 2000000, color: "#78c8ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Clovers", 0.001, "x", 24], ["Rune Speed", 0.00001, "x", 6], ["Rune Luck", 0.00001, "x", 6]] },
+      "Shamrock Spirit": { rarity: "Rare", order: 6, chance: 200000000, color: "#00783c", boosts: [["Luck", 100000000000, "x", 1e34], ["Clovers", 0.001, "x", 30], ["Rune Speed", 0.00001, "x", 8], ["Rune Bulk", 0.00001, "x", 8]] },
+      "Lucky Charm": { rarity: "Secret", order: 7, chance: 2000000000000, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.0001, "x", 67], ["Rune Speed", 0.00001, "x", 10], ["Rune Bulk", 0.00001, "x", 10], ["Rune Luck", 0.00001, "x", 10]] },
+    },
+  },
+  Ascended: {
+    color: "#22b14c",
+    isEvent: true,
+    runes: {
+      "1111": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 5], ["Rune Bulk", 0.0001, "x", 2.5]] },
+      "2222": { rarity: "Basic", order: 2, chance: 2500, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.005, "x", 5], ["Rune Speed", 0.002, "x", 3], ["Rune Luck", 0.001, "x", 3]] },
+      "3333": { rarity: "Basic", order: 3, chance: 70000, color: "#ff8c00", boosts: [["Luck", 1000000, "x", 1e25], ["Clovers", 0.001, "x", 10], ["Rune Speed", 0.0001, "x", 5], ["Rune Bulk", 0.0001, "x", 5]] },
+      "4444": { rarity: "Basic", order: 4, chance: 300000000000, color: "#ffd700", boosts: [["Luck", 10000000, "x", 1e28], ["Clovers", 0.0005, "x", 15], ["Rune Speed", 0.0001, "x", 6], ["Rune Bulk", 0.0001, "x", 6]] },
+      "5555": { rarity: "Rare", order: 5, chance: 100000000000000000, color: "#78c8ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Clovers", 0.00025, "x", 20], ["Rune Speed", 0.00005, "x", 8], ["Rune Bulk", 0.00005, "x", 8]] },
+      "6666": { rarity: "Rare", order: 6, chance: 250000000000000000000, color: "#00783c", boosts: [["Luck", 100000000000, "x", 1e34], ["Clovers", 0.0001, "x", 30], ["Rune Speed", 0.00001, "x", 10], ["Rune Bulk", 0.00001, "x", 10], ["Rune Luck", 0.000004, "x", 10]] },
+      "7777": { rarity: "Secret", order: 7, chance: 2e23, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.00001, "x", 50], ["Rune Speed", 0.000004, "x", 12], ["Rune Bulk", 0.000004, "x", 12]] },
+    },
+  },
   Premium: {
     color: "#009dff",
     runes: {
@@ -441,7 +467,7 @@ function calculateTimeToMax(params) {
   let practicalMaxCount = 0;
 
   for (const boost of rune.boosts) {
-    const [stat, per, , baseCap] = boost;
+    const [stat, per, op, baseCap] = boost;
     const effectiveCap = baseCap * capMult;
     const maxForThis = per > 0 ? Math.ceil((effectiveCap - 1) / per) : 0;
 
@@ -453,7 +479,10 @@ function calculateTimeToMax(params) {
       }
       const excluded = !alreadyMaxed && time > THIRTY_DAYS;
 
-      statTimes.push({ stat, maxCount: maxForThis, time, excluded, alreadyMaxed });
+      // Calculate the max boost value for this stat
+      const maxBoostDisplay = op === "+x" ? `+${formatNumber(effectiveCap - 1)}x` : `${formatNumber(effectiveCap)}x`;
+
+      statTimes.push({ stat, maxCount: maxForThis, time, excluded, alreadyMaxed, maxBoostDisplay });
 
       if (!excluded && !alreadyMaxed) {
         practicalTime = Math.max(practicalTime, time);
@@ -592,7 +621,7 @@ function BoostCalculator({ capMults }) {
     <>
       {/* Pack selector */}
       {[
-        { label: "Events", packs: ["1M Event"] },
+        { label: "Events", packs: ["1M Event", "Leprechaun", "Ascended"] },
         { label: "Robux", packs: ["Premium", "Global"] },
         { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
       ].map((group) => (
@@ -657,7 +686,7 @@ function BoostCalculator({ capMults }) {
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: b.isCapped ? css.yellow : rune.color }}>{b.displayValue}</span>
             </div>
             <div style={{ position: "relative", display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>
-              <span>+{formatNumber(b.per)}x/rune · max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
+              <span>{formatNumber(b.per)}/rune · max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
               <span>cap {formatNumber(b.effectiveCap)}x</span>
             </div>
           </div>
@@ -706,7 +735,7 @@ function TimeToMaxCalculator({ capMults }) {
     <>
       {/* Pack selector */}
       {[
-        { label: "Events", packs: ["1M Event"] },
+        { label: "Events", packs: ["1M Event", "Leprechaun", "Ascended"] },
         { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
       ].map((group) => (
         <div key={group.label} style={{ marginBottom: 12 }}>
@@ -727,6 +756,7 @@ function TimeToMaxCalculator({ capMults }) {
           return (<button key={name} onClick={() => { setSelectedRune(name); setResult(null); }} style={{ background: sel ? data.color + "18" : css.surface, border: `1px solid ${sel ? data.color + "60" : css.border}`, borderRadius: 8, padding: "10px 6px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
             <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 11, fontWeight: sel ? 700 : 500, color: sel ? data.color : css.text, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
             <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[data.rarity], fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{data.rarity}</span>
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>{formatChance(data.chance)}</span>
           </button>);
         })}
       </div>
@@ -794,8 +824,11 @@ function TimeToMaxCalculator({ capMults }) {
                   borderRadius: 6, border: `1px solid ${st.alreadyMaxed ? css.accent + "40" : css.border}`,
                   opacity: st.excluded ? 0.5 : 1,
                 }}>
-                  <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, color: st.alreadyMaxed ? css.accent : css.textBright, fontWeight: 600, minWidth: 120 }}>
+                  <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, color: st.alreadyMaxed ? css.accent : css.textBright, fontWeight: 600, minWidth: 100 }}>
                     {st.stat}
+                  </span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: css.textDim }}>
+                    {st.maxBoostDisplay}
                   </span>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim }}>
                     {formatNumber(st.maxCount)} runes
@@ -867,7 +900,7 @@ function RuneCalculator() {
   const capMults = useMemo(() => getCapMultipliers(reborn, challenge, frostLevel), [reborn, challenge, frostLevel]);
 
   const tabs = [
-    { id: "boost", label: "Boost Calc", icon: "" },
+    { id: "boost", label: "Boost Calculator", icon: "" },
     { id: "time", label: "Time to Max", icon: "" },
   ];
 
