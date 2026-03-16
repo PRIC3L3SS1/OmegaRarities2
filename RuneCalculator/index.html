@@ -65,7 +65,7 @@ const RUNE_PACKS = {
       "4444": { rarity: "Basic", order: 4, chance: 300000000000, color: "#ffd700", boosts: [["Luck", 10000000, "x", 1e28], ["Clovers", 0.0005, "x", 15], ["Rune Speed", 0.0001, "x", 6], ["Rune Bulk", 0.0001, "x", 6]] },
       "5555": { rarity: "Rare", order: 5, chance: 100000000000000000, color: "#78c8ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Clovers", 0.00025, "x", 20], ["Rune Speed", 0.00005, "x", 8], ["Rune Bulk", 0.00005, "x", 8]] },
       "6666": { rarity: "Rare", order: 6, chance: 250000000000000000000, color: "#00783c", boosts: [["Luck", 100000000000, "x", 1e34], ["Clovers", 0.0001, "x", 30], ["Rune Speed", 0.00001, "x", 10], ["Rune Bulk", 0.00001, "x", 10], ["Rune Luck", 0.000004, "x", 10]] },
-      "7777": { rarity: "Secret", order: 7, chance: 2e23, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.00001, "x", 50], ["Rune Speed", 0.000004, "x", 12], ["Rune Bulk", 0.000004, "x", 12]] },
+      "7777": { rarity: "Secret", order: 7, chance: 5e23, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.00001, "x", 50], ["Rune Speed", 0.000004, "x", 12], ["Rune Bulk", 0.000004, "x", 12]] },
     },
   },
   Premium: {
@@ -253,8 +253,9 @@ function parseSuffixNumber(str) {
 function formatNumber(n) {
   if (n === 0) return "0";
   const abs = Math.abs(n);
-  if (abs < 0.0001) return n.toExponential(4);
+  if (abs < 0.0001) return n.toExponential(2);
   if (abs < 1000) return parseFloat(n.toFixed(6)).toString();
+  if (abs >= 1e100) return n.toExponential(2);
   if (abs < 1e6) return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
   for (const [threshold, suf] of SUFFIXES) {
     if (abs >= threshold) return (n / threshold).toFixed(2).replace(/\.?0+$/, "") + suf;
@@ -264,9 +265,10 @@ function formatNumber(n) {
 
 function formatChance(n) {
   if (n === 1) return "Common";
+  if (n >= 1e100) return `1/${n.toExponential(2)}`;
   if (n >= 1e6) {
     for (const [threshold, suf] of SUFFIXES) {
-      if (n >= threshold) return `1/${(n / threshold).toFixed(1).replace(/\.?0+$/, "")}${suf}`;
+      if (n >= threshold) return `1/${(n / threshold).toFixed(2).replace(/\.?0+$/, "")}${suf}`;
     }
   }
   return `1/${n.toLocaleString("en-US")}`;
@@ -715,7 +717,7 @@ function TimeToMaxCalculator({ capMults }) {
   const handlePackChange = (name) => {
     setSelectedPack(name);
     const sorted = Object.entries(RUNE_PACKS[name].runes).sort((a, b) => a[1].order - b[1].order);
-    setSelectedRune(sorted[sorted.length - 1][0]); // default to rarest
+    setSelectedRune(sorted[sorted.length - 1][0]);
     setResult(null);
   };
 
@@ -847,8 +849,9 @@ function TimeToMaxCalculator({ capMults }) {
 
           {/* Rate info */}
           {result.targetPerSec > 0 && (
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, textAlign: "center", marginBottom: 16 }}>
-              Current: {formatNumber(result.targetPerSec)}/sec · {formatNumber(result.targetPerSec * 3600)}/hr
+            <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, textAlign: "center", marginBottom: 16 }}>
+              <span>Current: {formatNumber(result.targetPerSec)}/sec · {formatNumber(result.targetPerSec * 3600)}/hr</span>
+              <span>Effective rarity: {formatChance(rune.chance / parseSuffixNumber(luckInput))}</span>
             </div>
           )}
 
