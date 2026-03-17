@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rune Calculator</title>
   <link rel="icon" type="image/png" href="runeICON.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0a0c10; }
+    .katex { color: #e8edf8 !important; font-size: 1.1em !important; }
   </style>
 </head>
 <body>
@@ -16,9 +18,44 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 
   <script type="text/babel">
-    const { useState, useMemo, useCallback } = React;
+    const { useState, useMemo, useCallback, useRef, useEffect } = React;
+
+// ============================================================
+// LATEX COMPONENT
+// ============================================================
+
+function Latex({ children, block }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current && window.katex) {
+      try {
+        window.katex.render(children, ref.current, {
+          throwOnError: false,
+          displayMode: !!block,
+        });
+      } catch (e) {}
+    }
+  }, [children, block]);
+
+  if (block) {
+    return React.createElement("div", {
+      ref,
+      style: {
+        background: "#0a0c10",
+        border: "1px solid #2a3040",
+        borderRadius: 6,
+        padding: "14px 18px",
+        marginBottom: 10,
+        textAlign: "center",
+        overflowX: "auto",
+      },
+    });
+  }
+  return React.createElement("span", { ref });
+}
 
 // ============================================================
 // DATA
@@ -709,6 +746,7 @@ function TimeToMaxCalculator({ capMults }) {
   const [rpsInput, setRpsInput] = useState("");
   const [luckInput, setLuckInput] = useState("");
   const [result, setResult] = useState(null);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const pack = RUNE_PACKS[selectedPack];
   const rune = pack?.runes[selectedRune];
@@ -890,6 +928,79 @@ function TimeToMaxCalculator({ capMults }) {
           )}
         </div>
       )}
+
+      {/* How does this work */}
+      <div style={panelStyle}>
+        <div style={panelGlow} />
+        <div onClick={() => setShowHowItWorks(!showHowItWorks)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+          <div style={{ ...panelTitleStyle, marginBottom: 0 }}>How Does This Work?</div>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: css.textDim, transition: "transform 0.2s", transform: showHowItWorks ? "rotate(180deg)" : "none" }}>▼</span>
+        </div>
+        {showHowItWorks && (
+          <div style={{ fontSize: 13, color: css.text, lineHeight: 1.8, fontFamily: "'Chakra Petch', sans-serif", marginTop: 16 }}>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Using the Calculator</div>
+              <p>Select the rune pack and specific rune you're farming. Enter your current RPS (visible in-game), your Rune Luck multiplier, and how many of that rune you currently have. Press calculate, and compare the displayed effective rarity with your in-game odds to verify your inputs are correct.</p>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>The Problem</div>
+              <p>Predicting time to max isn't as simple as dividing runes needed by runes per second. Many runes have boosts like Rune Bulk, Rune Luck, and Rune Speed, that compound as you gain more of that rune. Every rune you obtain makes you slightly faster at obtaining the next one, creating accelerating growth.</p>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>The Approach: Closed-Form Integration</div>
+              <p style={{ marginBottom: 10 }}>Your acquisition rate at any rune count is:</p>
+              <Latex block>{String.raw`r(n) = R_0 \cdot B(n) \cdot L(n) \cdot S(n)`}</Latex>
+              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
+                <div><Latex>{String.raw`r(n)`}</Latex> <span style={{ color: css.textDim }}>— runes gained per second at count </span><Latex>{String.raw`n`}</Latex></div>
+                <div><Latex>{String.raw`R_0`}</Latex> <span style={{ color: css.textDim }}>— base rate, your acquisition speed with all compounding boosts removed</span></div>
+                <div><Latex>{String.raw`n`}</Latex> <span style={{ color: css.textDim }}>— current number of the target rune you own</span></div>
+                <div><Latex>{String.raw`B(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Bulk multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
+                <div><Latex>{String.raw`L(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Luck multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
+                <div><Latex>{String.raw`S(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Speed multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
+              </div>
+              <p style={{ marginBottom: 10 }}>Each compounding boost grows linearly with your rune count until it hits its cap:</p>
+              <Latex block>{String.raw`B(n) = \min(n \cdot p,\; C - 1) + 1`}</Latex>
+              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
+                <div><Latex>{String.raw`p`}</Latex> <span style={{ color: css.textDim }}>— per-rune boost value (e.g. 0.000076 for 1M Absolute's Rune Bulk)</span></div>
+                <div><Latex>{String.raw`C`}</Latex> <span style={{ color: css.textDim }}>— effective cap for this boost (base cap × progression multipliers)</span></div>
+              </div>
+              <p style={{ marginBottom: 10 }}>At <Latex>{String.raw`n = 0`}</Latex>, the boost is <Latex>{String.raw`1\times`}</Latex>. It grows linearly until <Latex>{String.raw`n \cdot p`}</Latex> reaches <Latex>{String.raw`C - 1`}</Latex>, at which point it's capped at <Latex>{String.raw`C\times`}</Latex>.</p>
+              <p style={{ marginBottom: 10 }}>To find the total time from count <Latex>{String.raw`A`}</Latex> to count <Latex>{String.raw`B`}</Latex>, we integrate the inverse of the rate:</p>
+              <Latex block>{String.raw`t = \int_{A}^{B} \frac{1}{r(n)}\, dn`}</Latex>
+              <p style={{ marginBottom: 10 }}>When two boosts share the same per-rune rate <Latex>{String.raw`p`}</Latex> (e.g. Rune Bulk and Rune Luck on 1M Absolute), the rate becomes a perfect square <Latex>{String.raw`R_0 \cdot (np + 1)^2`}</Latex>, giving a clean antiderivative:</p>
+              <Latex block>{String.raw`t = \frac{1}{R_0 \cdot p}\left[\frac{1}{Ap + 1} - \frac{1}{Bp + 1}\right]`}</Latex>
+              <p style={{ marginBottom: 10 }}>For two boosts with different growth rates <Latex>{String.raw`p_1`}</Latex> and <Latex>{String.raw`p_2`}</Latex>, we use partial fraction decomposition:</p>
+              <Latex block>{String.raw`t = \frac{1}{R_0(p_1 - p_2)}\left[\ln\!\frac{Bp_1 + 1}{Bp_2 + 1} - \ln\!\frac{Ap_1 + 1}{Ap_2 + 1}\right]`}</Latex>
+              <p>The result is exact. No simulation or approximation (as I did originally try before using integration).</p>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Handling Cap Boundaries</div>
+              <p>Different boosts cap at different rune counts. The calculator splits the integral at each cap boundary, solving a different equation for each segment. Before a cap, the boost accelerates your rate. After, it's constant. This means the time prediction naturally transitions from accelerating growth to linear growth as you approach and pass each cap.</p>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Base Rate Derivation</div>
+              <p style={{ marginBottom: 10 }}>We derive the base rate by factoring out the target rune's current compounding boost contribution from your inputs:</p>
+              <Latex block>{String.raw`R_0 = \frac{\text{RPS} \cdot \frac{1}{\text{chance}} \cdot \text{Luck}}{B(n_0) \cdot L(n_0) \cdot S(n_0)}`}</Latex>
+              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
+                <div><Latex>{String.raw`\text{RPS}`}</Latex> <span style={{ color: css.textDim }}>— your rolls per second (includes clone, bulk, speed from all sources)</span></div>
+                <div><Latex>{String.raw`\text{chance}`}</Latex> <span style={{ color: css.textDim }}>— the rune's base rarity (e.g. 9×10¹⁷ for 1M Absolute)</span></div>
+                <div><Latex>{String.raw`\text{Luck}`}</Latex> <span style={{ color: css.textDim }}>— your total Rune Luck multiplier</span></div>
+                <div><Latex>{String.raw`n_0`}</Latex> <span style={{ color: css.textDim }}>— your current count of the target rune</span></div>
+              </div>
+              <p>Your RPS already includes Rune Bulk and Speed boosts, and your Luck already includes the Rune Luck boost from the target rune. We divide these out at your current count <Latex>{String.raw`n_0`}</Latex>, isolating <Latex>{String.raw`R_0`}</Latex>. The integral then accurately models them growing back as <Latex>{String.raw`n`}</Latex> increases.</p>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Accuracy</div>
+              <p>This calculator was validated against real in-game data. The predicted rates match observed acquisition speeds within a few percent, as RNG naturally can not be perfectly predicted. The acceleration curve correctly models the compounding feedback loop. The projected hourly rates above show exactly how your speed increases over time as boosts compound.</p>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -915,7 +1026,7 @@ function RuneCalculator() {
 
   const navItems = [
     { label: "Rune Calculator", href: null, active: true },
-    { label: "Milestone Calculator", href: "https://pric3l3ss1.github.io/OmegaRarities2/MilestoneCalculator/", active: false },
+    { label: "Rare Rune Calc", href: "https://pric3l3ss1.github.io/OmegaRarities2/RareRuneCalc/", active: false },
   ];
 
   return (
