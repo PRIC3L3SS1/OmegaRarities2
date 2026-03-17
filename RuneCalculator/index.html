@@ -994,9 +994,14 @@ function TimeToMaxCalculator({ capMults }) {
               <p>Your RPS already includes Rune Bulk and Speed boosts, and your Luck already includes the Rune Luck boost from the target rune. We divide these out at your current count <Latex>{String.raw`n_0`}</Latex>, isolating <Latex>{String.raw`R_0`}</Latex>. The integral then accurately models them growing back as <Latex>{String.raw`n`}</Latex> increases.</p>
             </div>
 
-            <div>
+            <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Accuracy</div>
               <p>This calculator was validated against real in-game data. The predicted rates match observed acquisition speeds within a few percent, as RNG naturally can not be perfectly predicted. The acceleration curve correctly models the compounding feedback loop. The projected hourly rates above show exactly how your speed increases over time as boosts compound.</p>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>But wait, how do you even know what runes cap at?</div>
+              <p>Good question. For most runes you aren't able to figure that out on your own. Like, who would have known that 1M Absolute requires 400 trillion runes to max out the luck on it? I had to have help in order to figure out what runes cap at and their growth rate, that is where my friend Konami helped. </p>
             </div>
           </div>
         )}
