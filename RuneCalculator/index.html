@@ -1,1207 +1,1007 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rune Calculator</title>
-  <link rel="icon" type="image/png" href="runeICON.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0c10; }
-    .katex { color: #e8edf8 !important; font-size: 1.1em !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milestone Calculator</title>
+<meta property="og:title" content="OR2 Milestone Calculator">
+<meta property="og:description" content="Calculate milestone progress for Rare Runes, Runes Rolled, Luck/Rarity, and Time Played in Omega Rarities 2.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#00d4aa">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='24' cy='20' r='12' fill='%2300d4aa'/><circle cx='40' cy='20' r='12' fill='%2300d4aa'/><circle cx='18' cy='34' r='12' fill='%2300d4aa'/><circle cx='46' cy='34' r='12' fill='%2300d4aa'/><rect x='30' y='38' width='4' height='18' rx='2' fill='%23008866' transform='rotate(8 32 47)'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: #2a3040;
+    --border-glow: #3a4a6a;
+    --text: #c8d0e0;
+    --text-dim: #6a7590;
+    --text-bright: #e8edf8;
+    --accent: #00d4aa;
+    --accent-dim: #00d4aa33;
+    --accent-glow: #00d4aa66;
+    --red: #ff4466;
+    --red-dim: #ff446633;
+    --yellow: #ffaa22;
+    --yellow-dim: #ffaa2233;
+    --blue: #4488ff;
+    --blue-dim: #4488ff22;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Chakra Petch', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* Sidebar */
+  .sidebar-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 100; display: none;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .sidebar {
+    position: fixed; top: 0; left: -260px; bottom: 0;
+    width: 250px; background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 101; transition: left 0.25s ease;
+    padding: 72px 16px 24px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sidebar.open { left: 0; }
+
+  .sidebar-header {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .sidebar-header a { color: var(--text-dim); text-decoration: none; }
+
+  .sidebar-link {
+    display: block; padding: 10px 14px; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    font-family: 'Chakra Petch', sans-serif; font-size: 14px;
+    font-weight: 500; color: var(--text-dim);
+    text-decoration: none; transition: all 0.15s ease;
+  }
+  .sidebar-link:hover { border-color: var(--accent); color: var(--accent); }
+
+  .sidebar-active {
+    display: block; padding: 10px 14px; border-radius: 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0, 212, 170, 0.25);
+    font-family: 'Chakra Petch', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--accent);
+  }
+
+  .menu-btn {
+    position: fixed; top: 16px; left: 16px; z-index: 102;
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    padding: 0; transition: left 0.25s ease;
+  }
+  .menu-btn.open { left: 200px; }
+  .menu-btn .bar {
+    width: 18px; height: 2px; background: var(--text-dim);
+    border-radius: 1px; transition: all 0.2s;
+  }
+  .menu-btn.open .bar:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .menu-btn.open .bar:nth-child(2) { opacity: 0; }
+  .menu-btn.open .bar:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-dim);
+    border: 1px solid var(--accent); border-radius: 4px; padding: 4px 12px;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; color: var(--text-bright); letter-spacing: 1px; line-height: 1.2; }
+  .header h1 span { color: var(--accent); }
+  .header p { margin-top: 8px; font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  /* Panels */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+  }
+  .panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 16px;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex; gap: 6px; margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    flex: 1; min-width: 120px;
+    padding: 10px 14px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .tab-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .tab-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Inputs */
+  .input-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .input-group { flex: 1; min-width: 140px; }
+  .input-group label {
+    display: block; font-size: 12px; color: var(--text-dim);
+    margin-bottom: 6px; font-family: 'JetBrains Mono', monospace;
+  }
+  .input-group input, .input-group select {
+    width: 100%; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 16px;
+    color: var(--text-bright); outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus, .input-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .input-group input::placeholder { color: var(--text-dim); opacity: 0.5; }
+  .input-group select option { background: var(--bg); color: var(--text-bright); }
+
+  /* Buttons */
+  .btn {
+    font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 14px;
+    padding: 12px 22px; border-radius: 6px;
+    border: 1px solid; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent); border-color: var(--accent); color: var(--bg);
+  }
+  .btn-primary:hover { box-shadow: 0 0 16px var(--accent-glow); }
+
+  /* Tier table */
+  .tier-table { display: flex; flex-direction: column; gap: 2px; }
+  .tier-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; background: var(--bg);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  }
+  .tier-row.header-row {
+    background: transparent; padding: 4px 12px;
+    font-size: 10px; color: var(--text-dim);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .tier-row.current {
+    background: var(--accent-dim); border: 1px solid var(--accent);
+  }
+  .tier-row.completed {
+    opacity: 0.4;
+  }
+  .tier-col { min-width: 50px; }
+  .tier-col.tier-num { color: var(--text-dim); font-size: 12px; }
+  .tier-col.tier-num strong { color: var(--text-bright); }
+  .tier-row.current .tier-num { color: var(--accent); }
+  .tier-row.current .tier-num strong { color: var(--accent); }
+  .tier-col.tier-req { flex: 1; color: var(--accent); font-weight: 500; }
+  .tier-col.tier-boost { min-width: 80px; text-align: right; color: var(--text-dim); font-size: 11px; }
+  .tier-col.tier-time { min-width: 80px; text-align: right; color: var(--text-bright); font-size: 12px; font-weight: 600; }
+  .tier-col.tier-time.done { color: var(--accent); }
+  .tier-col.tier-rps { min-width: 80px; text-align: right; color: var(--blue); font-size: 11px; }
+
+  /* Suffix reference */
+  .suffix-ref {
+    margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .suffix-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 3px 8px; color: var(--text-dim);
+  }
+  .suffix-chip strong { color: var(--text); }
+
+  /* Summary banner */
+  .summary-banner {
+    text-align: center; padding: 20px;
+    background: linear-gradient(135deg, #00d4aa11, #00d4aa22);
+    border: 1px solid var(--accent); border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .summary-banner .label {
+    font-size: 10px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .summary-banner .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px; font-weight: 700; color: var(--text-bright);
+  }
+  .summary-banner .sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-dim); margin-top: 4px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* Binary search specific */
+  .search-state {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px; background: var(--surface2);
+    border-radius: 8px; margin-bottom: 20px;
+  }
+  .current-test { flex: 1; }
+  .current-test .label {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .current-test .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px; font-weight: 700; color: var(--accent); margin-top: 2px;
+  }
+  .current-test .raw {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-dim); margin-top: 2px;
+  }
+  .step-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--text-dim); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; text-align: center; line-height: 1.4;
+  }
+  .step-badge strong { display: block; font-size: 20px; color: var(--text-bright); }
+
+  .range-bar { margin-bottom: 20px; }
+  .range-labels {
+    display: flex; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+  .range-track {
+    position: relative; height: 8px;
+    background: var(--bg); border-radius: 4px; overflow: hidden;
+  }
+  .range-fill {
+    position: absolute; height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--yellow), var(--accent));
+    border-radius: 4px; transition: left 0.3s, width 0.3s;
+  }
+  .range-marker {
+    position: absolute; top: -4px; width: 3px; height: 16px;
+    background: var(--text-bright); border-radius: 2px;
+    transform: translateX(-50%); transition: left 0.3s;
+    box-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  .decision-row { display: flex; gap: 12px; }
+  .btn-too-low { flex: 1; background: var(--red-dim); border-color: var(--red); color: var(--red); font-size: 15px; padding: 14px; }
+  .btn-too-low:hover { background: #ff446644; }
+  .btn-perfect { flex: 1; background: var(--accent-dim); border-color: var(--accent); color: var(--accent); font-size: 15px; padding: 14px; }
+  .btn-perfect:hover { background: #00d4aa44; }
+  .btn-too-high { flex: 1; background: var(--yellow-dim); border-color: var(--yellow); color: var(--yellow); font-size: 15px; padding: 14px; }
+  .btn-too-high:hover { background: #ffaa2244; }
+
+  .btn-copy {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy.copied { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .log { max-height: 300px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .log-entry {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    animation: fadeIn 0.2s ease;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .log-step { color: var(--text-dim); min-width: 24px; text-align: center; }
+  .log-value { flex: 1; color: var(--text-bright); }
+  .log-result { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+  .log-result.low { color: var(--red); background: var(--red-dim); }
+  .log-result.high { color: var(--yellow); background: var(--yellow-dim); }
+  .log-result.found { color: var(--accent); background: var(--accent-dim); }
+  .empty-log { text-align: center; color: var(--text-dim); font-size: 13px; padding: 20px; opacity: 0.5; }
+
+  .btn-undo {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 6px 14px; border-radius: 5px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+  }
+  .btn-undo:hover { border-color: var(--red); color: var(--red); }
+
+  .btn-reset {
+    background: transparent; border-color: var(--border); color: var(--text-dim);
+    font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 11px;
+    padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+  }
+  .btn-reset:hover { border-color: var(--text-dim); color: var(--text); }
+
+  @media (max-width: 500px) {
+    .decision-row { flex-direction: column; }
+    .input-row { flex-direction: column; }
+    .tab-bar { gap: 4px; }
+    .tab-btn { min-width: 0; padding: 8px 10px; font-size: 12px; }
+  }
+</style>
 </head>
 <body>
-  <div id="root"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-
-  <script type="text/babel">
-    const { useState, useMemo, useCallback, useRef, useEffect } = React;
-
-// ============================================================
-// LATEX COMPONENT
-// ============================================================
-
-function Latex({ children, block }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current && window.katex) {
-      try {
-        window.katex.render(children, ref.current, {
-          throwOnError: false,
-          displayMode: !!block,
-        });
-      } catch (e) {}
-    }
-  }, [children, block]);
-
-  if (block) {
-    return React.createElement("div", {
-      ref,
-      style: {
-        background: "#0a0c10",
-        border: "1px solid #2a3040",
-        borderRadius: 6,
-        padding: "14px 18px",
-        marginBottom: 10,
-        textAlign: "center",
-        overflowX: "auto",
-      },
-    });
-  }
-  return React.createElement("span", { ref });
-}
-
-// ============================================================
-// DATA
-// ============================================================
-
-const RUNE_PACKS = {
-  "1M Event": {
-    color: "#ff6633",
-    isEvent: true,
-    runes: {
-      "1M Noob": { rarity: "Basic", order: 1, chance: 1, color: "#ffc878", boosts: [["Slime", 0.0001, "x", 2.5], ["Fire", 0.0001, "x", 1.25]] },
-      "1M Rookie": { rarity: "Basic", order: 2, chance: 2500, color: "#78dcff", boosts: [["Fire", 0.003, "x", 5], ["Rune Bulk", 0.01, "x", 1.15], ["Rune Luck", 0.001, "x", 1.05]] },
-      "1M Skilled": { rarity: "Basic", order: 3, chance: 200000, color: "#8cffaa", boosts: [["Luck", 1000000, "x", 100000000000], ["Comets", 0.0002, "x", 3], ["Snow", 0.0002, "x", 1.2], ["Rune Bulk", 0.01, "x", 1.2], ["Rune Luck", 0.001, "x", 1.04]] },
-      "1M Expert": { rarity: "Rare", order: 4, chance: 20000000, color: "#ff6450", boosts: [["Luck", 1000000000, "x", 10000000000000], ["Plasma", 0.0001, "x", 1.3], ["Frost", 0.0002, "x", 1.2], ["Rune Bulk", 0.0005, "x", 1.025], ["Rune Luck", 0.0005, "x", 1.025]] },
-      "1M Master": { rarity: "Secret", order: 5, chance: 15000000000, color: "#be8cff", boosts: [["Stardust", 0.0005, "x", 1.25], ["Meteors", 0.0005, "x", 1.25], ["Snowflakes", 0.0002, "x", 1.3], ["Rune Bulk", 0.0003, "x", 1.05], ["Rune Luck", 0.0003, "x", 1.05]] },
-      "1M Elite": { rarity: "Prestigious", order: 6, chance: 1000000000000, color: "#78f0ff", boosts: [["Luck", 100, "x", 1000000], ["Meteors", 0.001, "x", 1.2], ["Rune Bulk", 0.0015, "x", 1.06], ["Rune Luck", 0.0015, "x", 1.08]] },
-      "1M Mythic": { rarity: "Prestigious", order: 7, chance: 50000000000000, color: "#ff78c8", boosts: [["Luck", 1000, "x", 100000000], ["Stardust", 0.0001, "x", 1.1], ["Comets", 0.00001, "x", 1.2], ["Rune Bulk", 0.0015, "x", 1.13], ["Rune Luck", 0.0015, "x", 1.13]] },
-      "1M God": { rarity: "Prestigious", order: 8, chance: 1000000000000000, color: "#ffeb96", boosts: [["Luck", 100000000, "x", 1000000000000000], ["Comets", 0.0001, "x", 1.25], ["Stardust", 0.00001, "x", 1.2], ["Rune Bulk", 0.00005, "x", 1.15], ["Rune Luck", 0.00005, "x", 1.15], ["Passive Speed", 1e-7, "x", 0.38]] },
-      "1M Absolute": { rarity: "Prestigious", order: 9, chance: 900000000000000000, color: "#50c8ff", boosts: [["Luck", 100000, "x", 10000000000000000000], ["Singularity", 0.000075, "x", 2], ["Meteors", 0.000065, "x", 2], ["Rune Bulk", 0.000076, "x", 1.7], ["Rune Luck", 0.000076, "x", 1.7], ["Passive Speed", 0.000052, "x", 0.5]] },
-    },
-  },
-  Leprechaun: {
-    color: "#00a86b",
-    isEvent: true,
-    noCapMult: true,
-    runes: {
-      "Emerald Luck Rune": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 3], ["Rune Bulk", 0.0001, "x", 4]] },
-      "Clover Fortune": { rarity: "Basic", order: 2, chance: 100, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.002, "x", 5], ["Rune Speed", 0.0001, "x", 4]] },
-      "Leprechaun's Trick": { rarity: "Basic", order: 3, chance: 10000, color: "#ff8c00", boosts: [["Luck", 1000000, "x", 1e25], ["Clovers", 0.005, "x", 10], ["Rune Bulk", 0.0001, "x", 5], ["Rune Luck", 0.0001, "x", 5]] },
-      "Pot of Gold": { rarity: "Basic", order: 4, chance: 100000, color: "#ffd700", boosts: [["Luck", 10000000, "x", 1e28], ["Clovers", 0.001, "x", 12], ["Rune Speed", 0.0005, "x", 5], ["Rune Bulk", 0.0005, "x", 5]] },
-      "Rainbow's End": { rarity: "Rare", order: 5, chance: 2000000, color: "#78c8ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Clovers", 0.001, "x", 24], ["Rune Speed", 0.00001, "x", 6], ["Rune Luck", 0.00001, "x", 6]] },
-      "Shamrock Spirit": { rarity: "Rare", order: 6, chance: 200000000, color: "#00783c", boosts: [["Luck", 100000000000, "x", 1e34], ["Clovers", 0.001, "x", 30], ["Rune Speed", 0.00001, "x", 8], ["Rune Bulk", 0.00001, "x", 8]] },
-      "Lucky Charm": { rarity: "Secret", order: 7, chance: 2000000000000, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.0001, "x", 67], ["Rune Speed", 0.00001, "x", 10], ["Rune Bulk", 0.00001, "x", 10], ["Rune Luck", 0.00001, "x", 10]] },
-    },
-  },
-  Ascended: {
-    color: "#22b14c",
-    isEvent: true,
-    noCapMult: true,
-    runes: {
-      "1111": { rarity: "Basic", order: 1, chance: 1, color: "#00a86b", boosts: [["Luck", 0.002, "x", 1e19], ["Clovers", 0.001, "x", 5], ["Rune Bulk", 0.0001, "x", 2.5]] },
-      "2222": { rarity: "Basic", order: 2, chance: 2500, color: "#22b14c", boosts: [["Luck", 0.005, "x", 1e20], ["Clovers", 0.005, "x", 5], ["Rune Speed", 0.002, "x", 3], ["Rune Luck", 0.001, "x", 3]] },
-      "3333": { rarity: "Basic", order: 3, chance: 70000, color: "#ff8c00", boosts: [["Luck", 1000000, "x", 1e25], ["Clovers", 0.001, "x", 10], ["Rune Speed", 0.0001, "x", 5], ["Rune Bulk", 0.0001, "x", 5]] },
-      "4444": { rarity: "Basic", order: 4, chance: 300000000000, color: "#ffd700", boosts: [["Luck", 10000000, "x", 1e28], ["Clovers", 0.0005, "x", 15], ["Rune Speed", 0.0001, "x", 6], ["Rune Bulk", 0.0001, "x", 6]] },
-      "5555": { rarity: "Rare", order: 5, chance: 100000000000000000, color: "#78c8ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Clovers", 0.00025, "x", 20], ["Rune Speed", 0.00005, "x", 8], ["Rune Bulk", 0.00005, "x", 8]] },
-      "6666": { rarity: "Rare", order: 6, chance: 250000000000000000000, color: "#00783c", boosts: [["Luck", 100000000000, "x", 1e34], ["Clovers", 0.0001, "x", 30], ["Rune Speed", 0.00001, "x", 10], ["Rune Bulk", 0.00001, "x", 10], ["Rune Luck", 0.000004, "x", 10]] },
-      "7777": { rarity: "Secret", order: 7, chance: 5e23, color: "#78ff78", boosts: [["Luck", 10000000000, "x", 1e28], ["Clovers", 0.00001, "x", 50], ["Rune Speed", 0.000004, "x", 12], ["Rune Bulk", 0.000004, "x", 12]] },
-    },
-  },
-  Premium: {
-    color: "#009dff",
-    runes: {
-      Sovereign: { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Luck", 50, "x", 10000000000], ["Slime", 25, "x", 1000000]] },
-      Paragon: { rarity: "Basic", order: 2, chance: 5, color: "#d6d6d6", boosts: [["Luck", 40, "x", 10000000000], ["Fire", 2, "x", 1000], ["Rune Speed", 0.0025, "x", 2]] },
-      Titan: { rarity: "Basic", order: 3, chance: 40, color: "#fae771", boosts: [["Water", 1, "x", 20], ["Plasma", 0.5, "x", 14], ["Rune Bulk", 0.05, "x", 3]] },
-      Apex: { rarity: "Basic", order: 4, chance: 200, color: "#92f568", boosts: [["XP", 150, "x", 100000000], ["Snow", 10, "x", 3000], ["Rune Luck", 0.05, "x", 2]] },
-      Divine: { rarity: "Rare", order: 5, chance: 800, color: "#d9bfec", boosts: [["Frost", 0.1, "x", 15], ["Snowflakes", 0.05, "x", 10], ["Rune Clone", 1, "x", 1]] },
-      Royal: { rarity: "Rare", order: 6, chance: 2500, color: "#f798af", boosts: [["Meteors", 1, "x", 5], ["Ash", 0.3, "x", 3], ["Lava", 0.3, "x", 2], ["Passive Luck", 1.5, "x", 1.5]] },
-    },
-  },
-  Global: {
-    color: "#9500ff",
-    runes: {
-      Omni: { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Luck", 4, "x", 1e30]] },
-      Astra: { rarity: "Basic", order: 2, chance: 9, color: "#d6d6d6", boosts: [["Luck", 50, "x", 5000], ["Slime", 12, "x", 10000]] },
-      Nova: { rarity: "Basic", order: 3, chance: 75, color: "#fae771", boosts: [["Luck", 5, "x", 3000], ["XP", 2.5, "x", 2000], ["Snow", 1, "x", 50]] },
-      Zenith: { rarity: "Basic", order: 4, chance: 350, color: "#92f568", boosts: [["Stardust", 0.8, "x", 35], ["Rune Speed", 0.03, "x", 4]] },
-      Myth: { rarity: "Rare", order: 5, chance: 1000, color: "#d9bfec", boosts: [["Meteors", 0.5, "x", 20], ["Singularity", 0.25, "x", 10]] },
-      Ultra: { rarity: "Rare", order: 6, chance: 12000, color: "#f798af", boosts: [["Luck", 1, "x", 10000], ["Ash", 1, "x", 5], ["Rune Luck", 0.3, "x", 3], ["Rune Bulk", 0.5, "x", 2]] },
-    },
-  },
-  Slime: {
-    color: "#7dce82",
-    runes: {
-      "Clear Slime": { rarity: "Basic", order: 1, chance: 1, color: "#a1e3ff", boosts: [["Slime", 0.001, "x", 10]] },
-      "Cloud Slime": { rarity: "Basic", order: 2, chance: 10, color: "#d6d6d6", boosts: [["Luck", 0.001, "x", 6], ["Slime", 0.0015, "x", 5]] },
-      "Butter Slime": { rarity: "Basic", order: 3, chance: 50, color: "#fae771", boosts: [["Luck", 0.0025, "x", 4], ["XP", 0.002, "x", 2]] },
-      "Crunchy Slime": { rarity: "Basic", order: 4, chance: 600, color: "#92f568", boosts: [["XP", 0.002, "x", 3], ["Fire", 0.003, "x", 2]] },
-      "Icee Slime": { rarity: "Rare", order: 5, chance: 10000, color: "#d9bfec", boosts: [["XP", 0.1, "x", 8], ["Slime", 0.05, "x", 6]] },
-      "Jelly Cube Slime": { rarity: "Rare", order: 6, chance: 250000, color: "#f798af", boosts: [["Luck", 1, "x", 25], ["XP", 0.3, "x", 10], ["Slime", 0.3, "x", 3], ["Fire", 0.5, "x", 7]] },
-      "Glossy Slime": { rarity: "Secret", order: 7, chance: 100000000, color: "#f046a4", boosts: [["Luck", 3, "x", 50], ["XP", 7, "x", 200], ["Slime", 25, "x", 150], ["Fire", 3, "x", 50], ["Rune Bulk", 1, "+x", 4]] },
-      "Prismatic Slime": { rarity: "Prestigious", order: 8, chance: 1000000000000000, color: "#ffffff", boosts: [["Rune Luck", 0.01, "x", 1.5], ["Frost", 0.01, "x", 5]] },
-      "Genesis Slime": { rarity: "Prestigious", order: 9, chance: 7.5e41, color: "#ffffff", boosts: [["Luck", 200, "x", 1000000000000], ["XP", 400, "x", 1000000000000], ["Plasma", 0.05, "x", 12000], ["Snowflakes", 0.07, "x", 500], ["Rune Speed", 0.02, "x", 5], ["Rune Luck", 0.005, "x", 1.25]] },
-    },
-  },
-  Fire: {
-    color: "#ff6633",
-    runes: {
-      Ember: { rarity: "Basic", order: 1, chance: 1, color: "#ff8c50", boosts: [["XP", 0.002, "x", 3], ["Luck", 0.001, "x", 5]] },
-      Smoke: { rarity: "Basic", order: 2, chance: 25, color: "#787878", boosts: [["Fire", 0.007, "x", 10], ["XP", 0.002, "x", 5], ["Luck", 0.00005, "x", 3]] },
-      Flame: { rarity: "Basic", order: 3, chance: 450, color: "#ffb432", boosts: [["Luck", 0.03, "x", 8], ["XP", 0.02, "x", 5], ["Slime", 0.003, "x", 6]] },
-      Charcoal: { rarity: "Basic", order: 4, chance: 4000, color: "#3c3c3c", boosts: [["Luck", 0.05, "x", 10], ["XP", 0.01, "x", 3], ["Fire", 0.01, "x", 4]] },
-      Inferno: { rarity: "Rare", order: 5, chance: 30000, color: "#ff6432", boosts: [["Luck", 0.2, "x", 9], ["XP", 0.2, "x", 10], ["Slime", 0.5, "x", 8], ["Fire", 0.1, "x", 15]] },
-      "Lava Core": { rarity: "Rare", order: 6, chance: 175000, color: "#ff6669", boosts: [["Luck", 1, "x", 20], ["XP", 0.5, "x", 10], ["Slime", 0.5, "x", 25], ["Fire", 1, "x", 10]] },
-      Phoenix: { rarity: "Secret", order: 7, chance: 10000000, color: "#b339ff", boosts: [["Luck", 5, "x", 50], ["XP", 10, "x", 100], ["Slime", 5, "x", 100], ["Fire", 15, "x", 150], ["Rune Bulk", 2, "+x", 4]] },
-      Hades: { rarity: "Secret", order: 8, chance: 100000000000, color: "#680a0b", boosts: [["Luck", 250, "x", 1250], ["XP", 300, "x", 1500], ["Fire", 200, "x", 800], ["Rune Bulk", 10, "+x", 20]] },
-      "Hellstorm Core": { rarity: "Prestigious", order: 9, chance: 1.5e43, color: "#680a0b", boosts: [["Luck", 250, "x", 100000000000000], ["XP", 300, "x", 200000000000000], ["Snowflakes", 0.1, "x", 2000], ["Rune Luck", 0.003, "x", 1], ["Rune Speed", 0.01, "x", 3]] },
-    },
-  },
-  Plasma: { color: "#c896ff", runes: {
-    Spark: { rarity: "Basic", order: 1, chance: 1, color: "#c896ff", boosts: [["Plasma", 0.005, "x", 3], ["XP", 0.003, "x", 3]] },
-    Ionized: { rarity: "Basic", order: 2, chance: 100, color: "#f02323", boosts: [["XP", 0.008, "x", 5], ["Plasma", 0.01, "x", 4], ["Water", 0.006, "x", 4]] },
-    Voltage: { rarity: "Basic", order: 3, chance: 500, color: "#2fd9ff", boosts: [["Luck", 0.02, "x", 7], ["XP", 0.025, "x", 4], ["Plasma", 0.02, "x", 4]] },
-    Charged: { rarity: "Basic", order: 4, chance: 10000, color: "#64ff39", boosts: [["Luck", 0.06, "x", 10], ["XP", 0.015, "x", 20], ["Plasma", 0.025, "x", 6]] },
-    Supernova: { rarity: "Rare", order: 5, chance: 100000, color: "#ff64ff", boosts: [["Luck", 0.1, "x", 30], ["XP", 0.2, "x", 40], ["Water", 0.1, "x", 10], ["Plasma", 0.1, "x", 4]] },
-    Nebula: { rarity: "Secret", order: 6, chance: 5000000, color: "#7832b4", boosts: [["Luck", 5, "x", 100], ["XP", 12, "x", 300], ["Fire", 9, "x", 125], ["Plasma", 0.2, "x", 5]] },
-    Quasar: { rarity: "Secret", order: 7, chance: 500000000, color: "#c832ff", boosts: [["Luck", 150, "x", 1000], ["XP", 10000, "x", 100000], ["Plasma", 10, "x", 20], ["Rune Bulk", 10, "+x", 20], ["Rune Speed", 2, "x", 2]] },
-    Celestial: { rarity: "Prestigious", order: 8, chance: 100000000000, color: "#a200ff", boosts: [["Luck", 250, "x", 3000], ["XP", 30000, "x", 100000], ["Plasma", 25, "x", 100], ["Rune Bulk", 2, "x", 2]] },
-  }},
-  Snow: { color: "#b4e0ff", runes: {
-    Glacial: { rarity: "Basic", order: 1, chance: 2, color: "#f0f8ff", boosts: [["Luck", 0.015, "x", 100], ["Snow", 0.015, "x", 1.25]] },
-    Powder: { rarity: "Basic", order: 2, chance: 5002, color: "#f0f8ff", boosts: [["Snow", 0.03, "x", 3], ["XP", 0.01, "x", 100]] },
-    Rime: { rarity: "Basic", order: 3, chance: 40000000, color: "#c8e1ff", boosts: [["Luck", 0.0008, "x", 250], ["XP", 0.0005, "x", 250], ["Snow", 0.0015, "x", 4], ["Rune Bulk", 0.0005, "x", 0.5]] },
-    Sleet: { rarity: "Basic", order: 4, chance: 5000000000, color: "#96c8ff", boosts: [["Luck", 0.003, "x", 500], ["XP", 0.005, "x", 400], ["Snow", 0.006, "x", 5], ["Rune Speed", 0.01, "x", 1.75]] },
-    Permafrost: { rarity: "Basic", order: 5, chance: 250000000000, color: "#5aa0d2", boosts: [["Luck", 0.001, "x", 500], ["XP", 0.001, "x", 600], ["Frost", 0.01, "x", 0.5]] },
-    Blizzardcore: { rarity: "Rare", order: 6, chance: 4000000000000, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Frost", 0.025, "x", 0.75]] },
-    "Aurora Borealis": { rarity: "Secret", order: 7, chance: 350000000000000, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Fire", 0.02, "x", 5], ["Frost", 0.015, "x", 15], ["Rune Speed", 0.01, "x", 6]] },
-    "Polar Vortex": { rarity: "Secret", order: 8, chance: 50000000000000000, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Frost", 0.05, "x", 6], ["Rune Bulk", 0.001, "x", 2]] },
-    "Absolute Zero": { rarity: "Prestigious", order: 9, chance: 2.5e21, color: "#b4f0ff", boosts: [["Luck", 0.5, "x", 5000], ["XP", 0.2, "x", 2500], ["Snow", 0.4, "x", 20], ["Frost", 0.4, "x", 20], ["Rune Bulk", 0.01, "x", 2], ["Rune Speed", 0.01, "x", 2], ["Rune Luck", 0.01, "x", 2]] },
-  }},
-  Frost: { color: "#9efdff", runes: {
-    Frostbite: { rarity: "Basic", order: 1, chance: 2, color: "#9efdff", boosts: [["Frost", 0.0015, "x", 1.15], ["Luck", 0.001, "x", 500], ["Plasma", 0.0001, "x", 500]] },
-    Icicle: { rarity: "Basic", order: 2, chance: 500, color: "#00c8ff", boosts: [["Frost", 0.03, "x", 1.35], ["Luck", 0.03, "x", 1000], ["XP", 0.03, "x", 500], ["Rune Speed", 0.001, "x", 1.25]] },
-    Frozen: { rarity: "Basic", order: 3, chance: 25000, color: "#ffffff", boosts: [["Luck", 0.0008, "x", 1200], ["Snow", 0.005, "x", 3], ["Frost", 0.0006, "x", 1.5], ["XP", 0.0005, "x", 600], ["Rune Bulk", 0.005, "x", 0.5]] },
-    Cryogenic: { rarity: "Basic", order: 4, chance: 1500000000, color: "#e57dff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.005, "x", 400], ["Frost", 0.06, "x", 5], ["Snow", 0.001, "x", 10], ["Plasma", 0.01, "x", 250], ["Rune Speed", 0.001, "x", 1.5]] },
-    Subzero: { rarity: "Basic", order: 5, chance: 2500000000000, color: "#d0ff00", boosts: [["Luck", 0.1, "x", 500], ["XP", 0.1, "x", 600], ["Frost", 0.1, "x", 10], ["Rune Bulk", 0.05, "x", 2]] },
-    Frostcore: { rarity: "Rare", order: 6, chance: 100000000000000, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Frost", 0.02, "x", 10], ["Snow", 0.001, "x", 10]] },
-    Crystalline: { rarity: "Secret", order: 7, chance: 1.5e22, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Fire", 0.02, "x", 5], ["Plasma", 0.1, "x", 200], ["Frost", 0.01, "x", 5], ["Rune Speed", 0.001, "x", 2]] },
-    "Deep Freeze": { rarity: "Secret", order: 8, chance: 1e24, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Plasma", 0.1, "x", 150], ["Frost", 0.05, "x", 20], ["Rune Bulk", 1, "+x", 2]] },
-    "Eternal Ice": { rarity: "Prestigious", order: 9, chance: 5e25, color: "#b4f0ff", boosts: [["Luck", 0.5, "x", 5000], ["XP", 0.2, "x", 2500], ["Frost", 0.4, "x", 20], ["Rune Bulk", 1, "x", 2], ["Rune Speed", 1.01, "x", 2]] },
-  }},
-  Snowflakes: { color: "#b7eeff", runes: {
-    Needle: { rarity: "Basic", order: 1, chance: 1, color: "#9efdff", boosts: [["Snowflakes", 0.0015, "x", 2], ["Luck", 0.001, "x", 500]] },
-    Column: { rarity: "Basic", order: 2, chance: 2500, color: "#00c8ff", boosts: [["Snowflakes", 0.0005, "x", 1.2], ["Luck", 0.003, "x", 1000], ["Plasma", 0.001, "x", 300], ["Frost", 0.002, "x", 5]] },
-    Plate: { rarity: "Basic", order: 3, chance: 25000, color: "#ffffff", boosts: [["Luck", 0.0006, "x", 1200], ["Snow", 0.00002, "x", 7], ["Snowflakes", 0.0001, "x", 1.4], ["XP", 0.0004, "x", 600], ["Plasma", 0.002, "x", 400], ["Rune Bulk", 0.001, "x", 0.25]] },
-    "Stellar Dendrite": { rarity: "Basic", order: 4, chance: 25000000000, color: "#e57dff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.005, "x", 400], ["Plasma", 0.003, "x", 270], ["Snowflakes", 0.0005, "x", 2], ["Frost", 0.001, "x", 2]] },
-    "Sectored Plate": { rarity: "Basic", order: 5, chance: 2500000000000000, color: "#b7eeff", boosts: [["Luck", 0.01, "x", 500], ["XP", 0.01, "x", 600], ["Snowflakes", 0.02, "x", 2.3], ["Rune Bulk", 0.01, "x", 1.15]] },
-    Fernlike: { rarity: "Rare", order: 6, chance: 1e20, color: "#c8ebff", boosts: [["Luck", 0.003, "x", 400], ["XP", 0.004, "x", 400], ["Snowflakes", 0.005, "x", 3], ["Snow", 0.001, "x", 3]] },
-    "Radiating Dendrite": { rarity: "Secret", order: 7, chance: 3e28, color: "#78dcc8", boosts: [["Luck", 0.01, "x", 1000], ["XP", 0.02, "x", 600], ["Plasma", 0.03, "x", 200], ["Snowflakes", 0.01, "x", 2.35], ["Rune Bulk", 0.01, "x", 1.15]] },
-    "Capped Column": { rarity: "Secret", order: 8, chance: 2e31, color: "#3c6eaa", boosts: [["Luck", 0.02, "x", 2000], ["XP", 0.03, "x", 1000], ["Snowflakes", 0.05, "x", 20], ["Rune Bulk", 0.001, "x", 3], ["Rune Luck", 0.001, "x", 2]] },
-    Crystal: { rarity: "Prestigious", order: 9, chance: 2.1e33, color: "#b4f0ff", boosts: [["Luck", 0.1, "x", 50000], ["XP", 0.2, "x", 50000], ["Plasma", 0.1, "x", 200], ["Snowflakes", 0.01, "x", 10], ["Rune Bulk", 0.001, "x", 2], ["Rune Speed", 0.0001, "x", 3]] },
-    "Cosmic Ice": { rarity: "Prestigious", order: 10, chance: 2.5e40, color: "#695e9e", boosts: [["Luck", 100, "x", 100000000000], ["XP", 200, "x", 100000000000], ["Snowflakes", 0.04, "x", 50], ["Rune Bulk", 0.05, "x", 2], ["Rune Speed", 0.05, "x", 4], ["Rune Luck", 0.01, "x", 2.5]] },
-  }},
-  Stardust: { color: "#aa80dd", runes: {
-    "Stardust Core": { rarity: "Basic", order: 1, chance: 1, color: "#aaaaaa", boosts: [["Stardust", 0.001, "x", 2], ["Rune Speed", 0.001, "x", 1]] },
-    "Stardust Shard": { rarity: "Basic", order: 2, chance: 50000000, color: "#5082c8", boosts: [["Stardust", 0.005, "x", 3], ["Luck", 0.005, "x", 500]] },
-    "Stardust Relic": { rarity: "Basic", order: 3, chance: 25000000000000, color: "#5ac8dc", boosts: [["Stardust", 0.005, "x", 4.5], ["Luck", 0.03, "x", 8000], ["Fire", 0.01, "x", 5]] },
-    "Stardust Fragment": { rarity: "Basic", order: 4, chance: 15000000000000000000, color: "#6e46aa", boosts: [["Stardust", 0.001, "x", 6], ["Luck", 0.05, "x", 100000], ["Frost", 0.01, "x", 2.5]] },
-    "Stardust Sigil": { rarity: "Rare", order: 5, chance: 2.5e23, color: "#c83cc8", boosts: [["Stardust", 0.0025, "x", 6], ["Luck", 0.2, "x", 900000], ["Snowflakes", 0.01, "x", 4]] },
-    "Stardust Ember": { rarity: "Rare", order: 6, chance: 2.5e26, color: "#ff78c8", boosts: [["Stardust", 0.0025, "x", 6], ["Luck", 1, "x", 20000000], ["Snow", 0.01, "x", 3]] },
-    "Stardust Nexus": { rarity: "Secret", order: 7, chance: 1.5e32, color: "#783cff", boosts: [["Stardust", 0.0025, "x", 7.5], ["Luck", 5, "x", 5000000000], ["Plasma", 0.01, "x", 2]] },
-    "Stardust Essence": { rarity: "Prestigious", order: 8, chance: 5e36, color: "#f5f5ff", boosts: [["Stardust", 0.001, "x", 8], ["Luck", 2, "x", 5000000000], ["Comets", 0.00001, "x", 2]] },
-    "Stardust Remnant": { rarity: "Prestigious", order: 9, chance: 1e40, color: "#f5f5ff", boosts: [["Luck", 1000, "x", 1000000000], ["XP", 1000000000000, "x", 100000000000000000], ["Stardust", 0.001, "x", 5], ["Comets", 0.0001, "x", 5]] },
-  }},
-  Comets: { color: "#9b5fff", runes: {
-    "Cosmic Frost": { rarity: "Basic", order: 1, chance: 1, color: "#e6d9ff", boosts: [["Comets", 0.001, "x", 3]] },
-    "Stellar Ice": { rarity: "Basic", order: 2, chance: 50000000, color: "#bfa6ff", boosts: [["Comets", 0.002, "x", 6], ["Luck", 1000000, "x", 1e20]] },
-    "Orbital Debris": { rarity: "Basic", order: 3, chance: 150000000000000, color: "#9c8ac6", boosts: [["Comets", 0.003, "x", 5], ["Luck", 1000000, "x", 1e23], ["Stardust", 0.003, "x", 2.5]] },
-    "Drift Fragment": { rarity: "Basic", order: 4, chance: 1e33, color: "#6b4fa3", boosts: [["Comets", 0.004, "x", 6], ["Luck", 10000000, "x", 1e25]] },
-    "Velocity Mark": { rarity: "Rare", order: 5, chance: 1e38, color: "#8f5cff", boosts: [["Comets", 0.005, "x", 7], ["Luck", 100000000, "x", 1e26], ["Meteors", 0.005, "x", 7]] },
-    "Atmospheric Burn": { rarity: "Rare", order: 6, chance: 1e44, color: "#ff8fea", boosts: [["Comets", 0.005, "x", 8], ["Luck", 1000000000000000, "x", 1e28]] },
-    "Impact Horizon": { rarity: "Secret", order: 7, chance: 1e65, color: "#e3b7ff", boosts: [["Meteors", 0.005, "x", 10], ["Comets", 0.005, "x", 10], ["Stardust", 0.005, "x", 10]] },
-    "Extinction Core": { rarity: "Prestigious", order: 8, chance: 1e72, color: "#ffffff", boosts: [["Comets", 0.005, "x", 10], ["Luck", 250, "x", 1250], ["Meteors", 0.005, "x", 10], ["Stardust", 0.05, "x", 50]] },
-    "Astral Flux": { rarity: "Prestigious", order: 9, chance: 2.5e83, color: "#9b5fff", boosts: [["Luck", 1000000000000, "x", 1e40], ["Rune Bulk", 1e-7, "x", 3], ["Rune Speed", 1e-9, "x", 3], ["Rune Luck", 1e-12, "x", 3]] },
-  }},
-  Meteors: { color: "#c9b2ff", runes: {
-    "Iron Fragment": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Luck", 0.002, "x", 3], ["Meteors", 0.002, "x", 3]] },
-    "Molten Stone": { rarity: "Basic", order: 2, chance: 10000000000, color: "#919191", boosts: [["Luck", 0.005, "x", 5], ["Meteors", 0.002, "x", 3]] },
-    "Crater Dust": { rarity: "Basic", order: 3, chance: 1e19, color: "#c9b2ff", boosts: [["Luck", 1000000, "x", 1e19], ["Meteors", 0.002, "x", 3], ["Singularity", 0.002, "x", 0.25]] },
-    "Scorched Trail": { rarity: "Basic", order: 4, chance: 1e23, color: "#f01eff", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 1e21]] },
-    "Blazing Core": { rarity: "Rare", order: 5, chance: 1e30, color: "#1ee1ff", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 9]] },
-    "Fireball Spark": { rarity: "Rare", order: 6, chance: 1e36, color: "#ff8fea", boosts: [["Meteors", 0.002, "x", 3], ["Luck", 1000000, "x", 1e26]] },
-    "Shockwave Echo": { rarity: "Secret", order: 7, chance: 1e50, color: "#e3b7ff", boosts: [["Luck", 1000000, "x", 1e28], ["Meteors", 0.002, "x", 3]] },
-    "Cataclysm Shard": { rarity: "Prestigious", order: 8, chance: 1e63, color: "#ffffff", boosts: [["Singularity", 0.002, "x", 1.25], ["Luck", 1000000000, "x", 1e30]] },
-    "Cosmic Ember": { rarity: "Prestigious", order: 9, chance: 2.5e83, color: "#9b5fff", boosts: [["Meteors", 1, "x", 15], ["Singularity", 1, "x", 15], ["Luck", 1000000000000, "x", 1e30]] },
-  }},
-  Ash: { color: "#e6d9ff", runes: {
-    "Ash Fleck": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Luck", 0.002, "x", 1e19], ["Ash", 0.001, "x", 0.4]] },
-    "Pumice Stone": { rarity: "Basic", order: 2, chance: 1e19, color: "#919191", boosts: [["Luck", 0.005, "x", 1e20], ["Ash", 0.002, "x", 0.5]] },
-    "Cinder Dust": { rarity: "Basic", order: 3, chance: 2.5e20, color: "#c9b2ff", boosts: [["Luck", 1000000, "x", 1e25], ["Ash", 0.004, "x", 0.8], ["Lava", 0.001, "x", 0.1]] },
-    "Soot Trail": { rarity: "Basic", order: 4, chance: 3e25, color: "#f01eff", boosts: [["Luck", 10000000, "x", 1e28], ["Ash", 0.008, "x", 1.5], ["Lava", 0.0025, "x", 0.15625]] },
-    "Volcanic Core": { rarity: "Rare", order: 5, chance: 1e31, color: "#1ee1ff", boosts: [["Luck", 1000000000, "x", 1e31], ["Ash", 0.01, "x", 2], ["Lava", 0.005, "x", 0.3125], ["Rune Speed", 0.0001, "x", 2]] },
-    "Ashfall Remnant": { rarity: "Rare", order: 6, chance: 2.5e38, color: "#ff8fea", boosts: [["Luck", 100000000000, "x", 1e34], ["Ash", 0.001, "x", 5], ["Lava", 0.001, "x", 0.5], ["Rune Luck", 1e-7, "x", 0.9]] },
-    "Smoldering Wraith": { rarity: "Secret", order: 7, chance: 1e54, color: "#e3b7ff", boosts: [["Luck", 10000000000, "x", 1e28], ["Ash", 0.02, "x", 3.5], ["Lava", 0.05, "x", 2], ["Rune Bulk", 0.1, "x", 3]] },
-    Ignimbrite: { rarity: "Prestigious", order: 8, chance: 1e56, color: "#ffffff", boosts: [["Luck", 10000000000, "x", 1e28], ["Ash", 0.02, "x", 7], ["Lava", 0.05, "x", 4], ["Passive Luck", 0.05, "x", 1]] },
-  }},
-  Lava: { color: "#ff4422", runes: {
-    "Magma Droplet": { rarity: "Basic", order: 1, chance: 10, color: "#e6d9ff", boosts: [["Lava", 0.001, "x", 0.5], ["Damage", 0.01, "x", 0.125]] },
-    "Obsidian Chip": { rarity: "Basic", order: 2, chance: 1e20, color: "#919191", boosts: [["Lava", 0.005, "x", 0.15625], ["Damage", 0.005, "x", 0.15625], ["Spirit Orbs", 0.002, "x", 0.09375], ["Rune Bulk", 0.002, "x", 2]] },
-    "Pyroclast Dust": { rarity: "Basic", order: 3, chance: 1e25, color: "#c9b2ff", boosts: [["Lava", 0.001, "x", 2], ["Spirit Orbs", 0.002, "x", 0.5], ["Passive Luck", 0.0005, "x", 0.125], ["Rune Bulk", 0.002, "x", 3]] },
-    "Molten Trail": { rarity: "Basic", order: 4, chance: 1e32, color: "#f01eff", boosts: [["Damage", 0.005, "x", 0.15625], ["Spirit Orbs", 0.005, "x", 0.09375], ["Rune Bulk", 0.02, "x", 2]] },
-  }},
-};
-
-const RARITY_COLORS = { Basic: "#6a7590", Rare: "#ff4466", Secret: "#be8cff", Prestigious: "#ffaa22" };
-
-const SUFFIXES = [
-  [1e303, "Ce"],
-  [1e150, "NoQg"],[1e147, "OcQg"],[1e144, "SpQg"],[1e141, "SxQg"],
-  [1e138, "QnQg"],[1e135, "QaQg"],[1e132, "TQg"],[1e129, "DQg"],
-  [1e126, "UQg"],[1e123, "Qg"],
-  [1e120, "NoTg"],[1e117, "OcTg"],[1e114, "SpTg"],[1e111, "SxTg"],
-  [1e108, "QnTg"],[1e105, "QaTg"],[1e102, "TTg"],[1e99, "DTg"],
-  [1e96, "UTg"],[1e93, "Tg"],
-  [1e90, "NoVt"],[1e87, "OcVt"],[1e84, "SpVt"],[1e81, "SxVt"],
-  [1e78, "QnVt"],[1e75, "QaVt"],
-  [1e72, "TVt"],[1e69, "DVt"],[1e66, "UVt"],[1e63, "Vt"],
-  [1e60, "NoDe"],[1e57, "OcDe"],[1e54, "SpDe"],[1e51, "SxDe"],
-  [1e48, "QnDe"],[1e45, "QdDe"],[1e42, "TDe"],[1e39, "DDe"],
-  [1e36, "UDe"],[1e33, "De"],[1e30, "No"],[1e27, "Oc"],
-  [1e24, "Sp"],[1e21, "Sx"],[1e18, "Qn"],[1e15, "Qd"],
-  [1e12, "T"],[1e9, "B"],[1e6, "M"],[1e3, "K"],
-];
-
-const SUFFIX_MAP = {};
-SUFFIXES.forEach(([val, suf]) => { SUFFIX_MAP[suf.toLowerCase()] = val; });
-
-function parseSuffixNumber(str) {
-  if (!str || str.trim() === "") return 0;
-  str = str.trim();
-  const num = parseFloat(str);
-  if (!isNaN(num) && /^[\d.eE+\-]+$/.test(str)) return num;
-  const match = str.match(/^([\d.eE+\-]+)\s*([a-zA-Z]+)$/);
-  if (match) {
-    const val = parseFloat(match[1]);
-    const suf = match[2].toLowerCase();
-    if (SUFFIX_MAP[suf] !== undefined) return val * SUFFIX_MAP[suf];
-  }
-  return NaN;
-}
-
-function formatNumber(n) {
-  if (n === 0) return "0";
-  const abs = Math.abs(n);
-  if (abs < 0.0001) return n.toExponential(2);
-  if (abs < 1000) return parseFloat(n.toFixed(6)).toString();
-  if (abs >= 1e100) return n.toExponential(2);
-  if (abs < 1e6) return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
-  for (const [threshold, suf] of SUFFIXES) {
-    if (abs >= threshold) return (n / threshold).toFixed(2).replace(/\.?0+$/, "") + suf;
-  }
-  return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
-}
-
-function formatChance(n) {
-  if (n === 1) return "Common";
-  if (n >= 1e100) return `1/${n.toExponential(2)}`;
-  if (n >= 1e6) {
-    for (const [threshold, suf] of SUFFIXES) {
-      if (n >= threshold) return `1/${(n / threshold).toFixed(2).replace(/\.?0+$/, "")}${suf}`;
-    }
-  }
-  return `1/${n.toLocaleString("en-US")}`;
-}
-
-function formatTime(seconds) {
-  if (!isFinite(seconds) || seconds < 0) return "Never";
-  if (seconds < 60) return `${Math.ceil(seconds)}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.floor(seconds % 60)}s`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-  if (seconds < 86400 * 365) return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
-  const years = seconds / (86400 * 365);
-  if (years < 1000) return `${years.toFixed(1)} years`;
-  return `${formatNumber(years)} years`;
-}
-
-function getCapMultipliers(reborn, challenge, frostLevel) {
-  let basicCap = 1;
-  if (reborn >= 3) basicCap *= 2;
-  if (reborn >= 5) basicCap *= 2;
-  if (reborn >= 6) basicCap *= 2;
-  let rareCap = 1;
-  if (reborn >= 5) rareCap *= 2;
-  if (reborn >= 6) rareCap *= 2;
-  let allRunes = 1 + frostLevel / 75;
-  if (challenge >= 4) allRunes *= 2;
-  return { basicCap, rareCap, allRunes };
-}
-
-function getEffectiveCapMult(rarity, mults, isEvent, noCapMult) {
-  if (noCapMult) return 1;
-  if (isEvent) return mults.allRunes;
-  if (rarity === "Basic") return mults.basicCap * mults.allRunes;
-  if (rarity === "Rare") return mults.rareCap * mults.allRunes;
-  return mults.allRunes;
-}
-
-function calcSingleBoostValue(count, per, op, effectiveCap) {
-  let raw = count * per;
-  if (effectiveCap && effectiveCap - 1 < raw) raw = effectiveCap - 1;
-  if (op === "+x") return raw;
-  return raw + 1;
-}
-
-function calculateBoost(rune, amount, capMult) {
-  const results = [];
-  for (const boost of rune.boosts) {
-    const [stat, per, op, baseCap] = boost;
-    const effectiveCap = baseCap * capMult;
-    let raw = amount * per;
-    if (effectiveCap && effectiveCap - 1 < raw) raw = effectiveCap - 1;
-    const maxAmount = per > 0 ? Math.ceil((effectiveCap - 1) / per) : Infinity;
-    let displayValue = op === "+x" ? `+${formatNumber(raw)}x` : `${formatNumber(raw + 1)}x`;
-    const cappedPercent = Math.min(100, per > 0 ? (amount / maxAmount) * 100 : 0);
-    results.push({ stat, per, op, baseCap, effectiveCap, raw, displayValue, maxAmount, cappedPercent, isCapped: amount >= maxAmount });
-  }
-  return results;
-}
-
-// ============================================================
-// TIME TO MAX CALCULATION
-// ============================================================
-
-function calculateTimeToMax(params) {
-  const { rune, chance, currentCount, baseRPS, baseLuck, capMult } = params;
-  const THIRTY_DAYS = 30 * 86400;
-
-  // Build the three feedback boost channels
-  // Every rune implicitly has all three; if not present, per=0 and it stays at 1x
-  const feedbackChannels = { bulk: null, luck: null, speed: null };
-  for (const boost of rune.boosts) {
-    const [stat, per, op, baseCap] = boost;
-    if (stat === "Rune Bulk" && per > 0) feedbackChannels.bulk = { per, effectiveCap: baseCap * capMult };
-    if (stat === "Rune Luck" && per > 0) feedbackChannels.luck = { per, effectiveCap: baseCap * capMult };
-    if (stat === "Rune Speed" && per > 0) feedbackChannels.speed = { per, effectiveCap: baseCap * capMult };
-  }
-
-  // Collect active feedback boosts (per > 0)
-  const feedbackBoosts = [];
-  for (const [key, val] of Object.entries(feedbackChannels)) {
-    if (val) feedbackBoosts.push({ ...val, key });
-  }
-
-  // Factor out current boost to get baseRate
-  let currentMult = 1;
-  for (const fb of feedbackBoosts) {
-    let raw = currentCount * fb.per;
-    if (fb.effectiveCap - 1 < raw) raw = fb.effectiveCap - 1;
-    currentMult *= (raw + 1);
-  }
-
-  // baseRate = rate with all feedback boosts at 1x
-  // RPS includes bulk & speed boosts, luck includes luck boost
-  // We divide out everything to get the "naked" rate
-  const baseRate = (baseRPS * (1 / chance) * baseLuck) / currentMult;
-
-  // Helper: compute time from countA to countB using integration
-  function computeTime(countA, countB) {
-    if (countA >= countB) return 0;
-
-    // Find all cap points within [countA, countB)
-    const capPoints = [];
-    for (const fb of feedbackBoosts) {
-      const capCount = Math.ceil((fb.effectiveCap - 1) / fb.per);
-      if (capCount > countA && capCount < countB) {
-        capPoints.push(capCount);
-      }
-    }
-    // Deduplicate and sort
-    const uniqueCapPoints = [...new Set(capPoints)].sort((a, b) => a - b);
-    const segments = [countA, ...uniqueCapPoints, countB];
-    let totalTime = 0;
-
-    for (let s = 0; s < segments.length - 1; s++) {
-      const segA = segments[s];
-      const segB = segments[s + 1];
-
-      // Partition boosts into capped vs growing in this segment
-      let constantMult = 1;
-      const growingPers = [];
-
-      for (const fb of feedbackBoosts) {
-        const capCount = Math.ceil((fb.effectiveCap - 1) / fb.per);
-        if (segA >= capCount) {
-          constantMult *= fb.effectiveCap;
-        } else {
-          growingPers.push(fb.per);
-        }
-      }
-
-      const R = baseRate * constantMult;
-
-      if (growingPers.length === 0) {
-        // All capped — constant rate
-        totalTime += (segB - segA) / R;
-
-      } else if (growingPers.length === 1) {
-        // ∫ 1/(R·(np+1)) dn = (1/Rp)·ln((Ap+1)/(Bp+1))
-        const p = growingPers[0];
-        totalTime += (1 / (R * p)) * Math.log((segA * p + 1) / (segB * p + 1)) * -1;
-        // Simplified: (1/(R*p)) * ln((segB*p+1)/(segA*p+1))
-        // Which equals: (1/(R*p)) * [ln(segB*p+1) - ln(segA*p+1)]
-
-      } else if (growingPers.length === 2 && growingPers[0] === growingPers[1]) {
-        // ∫ 1/(R·(np+1)²) dn = -1/(Rp·(np+1)) evaluated A to B
-        const p = growingPers[0];
-        totalTime += (1 / (R * p)) * (1 / (segA * p + 1) - 1 / (segB * p + 1));
-
-      } else if (growingPers.length === 2 && growingPers[0] !== growingPers[1]) {
-        // Partial fractions: ∫ 1/(R·(np₁+1)(np₂+1)) dn
-        // = 1/(R·(p₁-p₂)) · ln((np₁+1)/(np₂+1)) evaluated A to B
-        const p1 = growingPers[0];
-        const p2 = growingPers[1];
-        const atB = Math.log((segB * p1 + 1) / (segB * p2 + 1));
-        const atA = Math.log((segA * p1 + 1) / (segA * p2 + 1));
-        totalTime += (1 / (R * (p1 - p2))) * (atB - atA);
-
-      } else if (growingPers.length === 3) {
-        // Three growing boosts — check for matching pairs
-        const [p1, p2, p3] = growingPers;
-        if (p1 === p2 && p2 === p3) {
-          // All same: ∫ 1/(R·(np+1)³) dn = -1/(2Rp·(np+1)²) evaluated A to B
-          const p = p1;
-          totalTime += (1 / (2 * R * p)) * (1 / (segA * p + 1) ** 2 - 1 / (segB * p + 1) ** 2);
-        } else if (p1 === p2) {
-          // Two same + one different: ∫ 1/(R·(np₁+1)²·(np₃+1)) dn
-          // Partial fractions, then integrate
-          // Use numerical for safety
-          totalTime += simpsonIntegrate(R, growingPers, segA, segB);
-        } else {
-          // All different or other combos — numerical
-          totalTime += simpsonIntegrate(R, growingPers, segA, segB);
-        }
-      } else {
-        // Fallback: numerical
-        totalTime += simpsonIntegrate(R, growingPers, segA, segB);
-      }
-    }
-
-    return totalTime;
-  }
-
-  function simpsonIntegrate(R, pers, a, b) {
-    const n = 2000;
-    const h = (b - a) / n;
-    let sum = 0;
-    for (let i = 0; i <= n; i++) {
-      const c = a + i * h;
-      let mult = 1;
-      for (const p of pers) {
-        mult *= (c * p + 1);
-      }
-      const weight = i === 0 || i === n ? 1 : i % 2 === 0 ? 2 : 4;
-      sum += weight / (R * mult);
-    }
-    return (h / 3) * sum;
-  }
-
-  // Calculate time for each stat
-  const statTimes = [];
-  let practicalTime = 0;
-  let practicalMaxCount = 0;
-
-  for (const boost of rune.boosts) {
-    const [stat, per, op, baseCap] = boost;
-    const effectiveCap = baseCap * capMult;
-    const maxForThis = per > 0 ? Math.ceil((effectiveCap - 1) / per) : 0;
-
-    if (maxForThis > 0) {
-      const alreadyMaxed = currentCount >= maxForThis;
-      let time = 0;
-      if (!alreadyMaxed) {
-        time = computeTime(currentCount, maxForThis);
-      }
-      const excluded = !alreadyMaxed && time > THIRTY_DAYS;
-
-      // Calculate the max boost value for this stat
-      const maxBoostDisplay = op === "+x" ? `+${formatNumber(effectiveCap - 1)}x` : `${formatNumber(effectiveCap)}x`;
-
-      statTimes.push({ stat, maxCount: maxForThis, time, excluded, alreadyMaxed, maxBoostDisplay });
-
-      if (!excluded && !alreadyMaxed) {
-        practicalTime = Math.max(practicalTime, time);
-        practicalMaxCount = Math.max(practicalMaxCount, maxForThis);
-      }
-    }
-  }
-
-  // If everything is excluded, use the shortest
-  if (practicalMaxCount === 0 && statTimes.length > 0) {
-    const shortest = statTimes.filter(s => !s.alreadyMaxed).sort((a, b) => a.time - b.time)[0];
-    if (shortest) {
-      practicalTime = shortest.time;
-      practicalMaxCount = shortest.maxCount;
-    }
-  }
-
-  // Current rate for display
-  const currentRate = baseRate * currentMult;
-
-  // Compute hourly rate projection
-  // We step forward in 1-hour increments, tracking count and rate
-  const hourlyRates = [];
-  const maxHours = Math.min(Math.ceil(practicalTime / 3600), 48); // cap at 48 hours
-  
-  if (practicalTime > 0 && maxHours > 0) {
-    let simCount = currentCount;
-    let simTime = 0;
-    const hourStep = 3600; // 1 hour in seconds
-
-    for (let h = 0; h <= maxHours; h++) {
-      // Rate at current simCount
-      let mult = 1;
-      for (const fb of feedbackBoosts) {
-        let raw = simCount * fb.per;
-        if (fb.effectiveCap - 1 < raw) raw = fb.effectiveCap - 1;
-        mult *= (raw + 1);
-      }
-      const rateAtCount = baseRate * mult;
-      hourlyRates.push({ hour: h, count: Math.floor(simCount), rate: rateAtCount });
-
-      if (h < maxHours) {
-        // Advance 1 hour: how many runes gained?
-        // For small steps, rate * dt is a good approximation
-        // But for accuracy, use the integral inverse
-        // Simple approach: use average of rate at start and estimated end
-        const runesThisHour = rateAtCount * hourStep;
-        simCount = Math.min(simCount + runesThisHour, practicalMaxCount);
-        simTime += hourStep;
-        if (simCount >= practicalMaxCount) break;
-      }
-    }
-  }
-
-  statTimes.sort((a, b) => a.time - b.time);
-
-  return {
-    time: practicalTime,
-    maxCount: practicalMaxCount,
-    targetPerSec: currentRate,
-    statTimes,
-    hourlyRates,
-  };
-}
-// ============================================================
-// STYLES
-// ============================================================
-
-const css = {
-  bg: "#0a0c10", surface: "#12151c", surface2: "#1a1e28",
-  border: "#2a3040", borderGlow: "#3a4a6a",
-  text: "#c8d0e0", textDim: "#6a7590", textBright: "#e8edf8",
-  accent: "#20b0ff", accentDim: "#20b0ff33",
-  red: "#ff4466", yellow: "#ffaa22", yellowDim: "#ffaa2233",
-};
-
-const panelStyle = {
-  background: css.surface, border: `1px solid ${css.border}`,
-  borderRadius: 10, padding: "24px", marginBottom: 16,
-  position: "relative", overflow: "hidden",
-};
-const panelGlow = {
-  position: "absolute", top: 0, left: 0, right: 0, height: 1,
-  background: `linear-gradient(90deg, transparent, ${css.borderGlow}, transparent)`,
-};
-const panelTitleStyle = {
-  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-  letterSpacing: "2px", textTransform: "uppercase",
-  color: css.textDim, marginBottom: 16,
-};
-const labelStyle = {
-  display: "block", fontSize: 12, color: css.textDim,
-  marginBottom: 6, fontFamily: "'JetBrains Mono', monospace",
-};
-const inputStyle = {
-  width: "100%", background: css.bg, border: `1px solid ${css.border}`,
-  borderRadius: 6, padding: "12px 14px",
-  fontFamily: "'JetBrains Mono', monospace", fontSize: 16,
-  color: css.textBright, outline: "none", boxSizing: "border-box",
-};
-
-// ============================================================
-// COMPONENTS
-// ============================================================
-
-function BoostCalculator({ capMults }) {
-  const [selectedPack, setSelectedPack] = useState("1M Event");
-  const [selectedRune, setSelectedRune] = useState("1M Noob");
-  const [amount, setAmount] = useState("1");
-
-  const pack = RUNE_PACKS[selectedPack];
-  const rune = pack?.runes[selectedRune];
-  const effectiveCapMult = useMemo(() => rune ? getEffectiveCapMult(rune.rarity, capMults, pack?.isEvent, pack?.noCapMult) : 1, [rune, capMults, pack]);
-  const sortedRunes = useMemo(() => pack ? Object.entries(pack.runes).sort((a, b) => a[1].order - b[1].order) : [], [pack]);
-  const parsedAmount = parseSuffixNumber(amount) || 0;
-  const boosts = useMemo(() => rune ? calculateBoost(rune, parsedAmount, effectiveCapMult) : [], [rune, parsedAmount, effectiveCapMult]);
-
-  const handlePackChange = (name) => {
-    setSelectedPack(name);
-    const first = Object.entries(RUNE_PACKS[name].runes).sort((a, b) => a[1].order - b[1].order)[0][0];
-    setSelectedRune(first);
-  };
-
-  const levelButton = (level, current, accentColor) => ({
-    width: 30, height: 30, borderRadius: 6,
-    border: `1px solid ${current === level ? accentColor + "60" : css.border}`,
-    background: current === level ? accentColor + "20" : css.bg,
-    color: current === level ? accentColor : css.textDim,
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-    fontWeight: current === level ? 700 : 400,
-    cursor: "pointer", padding: 0,
-    display: "flex", alignItems: "center", justifyContent: "center",
-  });
-
-  return (
-    <>
-      {/* Pack selector */}
-      {[
-        { label: "Events", packs: ["1M Event", "Leprechaun", "Ascended"] },
-        { label: "Robux", packs: ["Premium", "Global"] },
-        { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
-      ].map((group) => (
-        <div key={group.label} style={{ marginBottom: 12 }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: css.textDim, marginBottom: 6 }}>{group.label}</div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {group.packs.map((name) => {
-              const data = RUNE_PACKS[name]; if (!data) return null;
-              return (<button key={name} onClick={() => handlePackChange(name)} style={{ padding: "8px 14px", borderRadius: 8, whiteSpace: "nowrap", border: `1px solid ${selectedPack === name ? data.color + "60" : css.border}`, background: selectedPack === name ? data.color + "18" : css.surface, cursor: "pointer", fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, fontWeight: selectedPack === name ? 700 : 500, color: selectedPack === name ? data.color : css.textDim }}>{name}</button>);
-            })}
-          </div>
-        </div>
-      ))}
-
-      {/* Rune selector */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 20 }}>
-        {sortedRunes.map(([name, data]) => {
-          const sel = name === selectedRune;
-          return (<button key={name} onClick={() => setSelectedRune(name)} style={{ background: sel ? data.color + "18" : css.surface, border: `1px solid ${sel ? data.color + "60" : css.border}`, borderRadius: 8, padding: "10px 6px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.15s ease" }}>
-            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 11, fontWeight: sel ? 700 : 500, color: sel ? data.color : css.text, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
-            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[data.rarity], fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{data.rarity}</span>
-            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>{formatChance(data.chance)}</span>
-          </button>);
-        })}
-      </div>
-
-      {/* Input */}
-      <div style={panelStyle}>
-        <div style={panelGlow} />
-        <label style={labelStyle}>Rune Count (supports suffixes like 1B, 3.5De)</label>
-        <input type="text" value={amount} onChange={(e) => setAmount(e.target.value)} style={inputStyle} placeholder="e.g. 64350 or 1.5B" />
-      </div>
-
-      {/* Header */}
-      {rune && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, padding: "14px 18px", background: rune.color + "10", border: `1px solid ${rune.color}30`, borderRadius: 10 }}>
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: rune.color, boxShadow: `0 0 12px ${rune.color}80`, flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 17, fontWeight: 700, color: rune.color }}>{selectedRune}</span>
-            <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[rune.rarity], marginLeft: 10, fontWeight: 600, letterSpacing: "1px" }}>{rune.rarity.toUpperCase()}</span>
-            {boosts.length > 0 && (() => {
-              const max = Math.max(...boosts.map(b => b.maxAmount === Infinity ? 0 : b.maxAmount));
-              return max > 0 ? <span style={{ fontSize: 10, color: css.textDim, marginLeft: 10, fontFamily: "'JetBrains Mono', monospace" }}>max all at {formatNumber(max)}</span> : null;
-            })()}
-          </div>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, color: css.textBright, fontWeight: 600 }}>x{formatNumber(parsedAmount)}</span>
-        </div>
-      )}
-
-      {/* Boosts */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {boosts.map((b, i) => (
-          <div key={i} style={{ ...panelStyle, marginBottom: 0, padding: "16px 18px" }}>
-            <div style={panelGlow} />
-            <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: `${b.cappedPercent}%`, background: b.isCapped ? css.yellowDim : rune.color + "10", transition: "width 0.3s ease", borderRadius: 10 }} />
-            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 14, fontWeight: 600, color: css.textBright }}>{b.stat}</span>
-                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, padding: "2px 6px", background: css.bg, borderRadius: 4, border: `1px solid ${css.border}` }}>{b.op === "+x" ? "ADDITIVE" : "MULTIPLY"}</span>
-                {b.isCapped && <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.yellow, fontWeight: 700, padding: "2px 6px", background: css.yellowDim, borderRadius: 4 }}>CAPPED</span>}
-              </div>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: b.isCapped ? css.yellow : rune.color }}>{b.displayValue}</span>
-            </div>
-            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>
-              <span>{formatNumber(b.per)}/rune · max at {b.maxAmount === Infinity ? "∞" : formatNumber(b.maxAmount)} runes</span>
-              <span>cap {formatNumber(b.effectiveCap)}x</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function TimeToMaxCalculator({ capMults }) {
-  const [selectedPack, setSelectedPack] = useState("1M Event");
-  const [selectedRune, setSelectedRune] = useState("1M Absolute");
-  const [currentCount, setCurrentCount] = useState("");
-  const [rpsInput, setRpsInput] = useState("");
-  const [luckInput, setLuckInput] = useState("");
-  const [result, setResult] = useState(null);
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
-
-  const pack = RUNE_PACKS[selectedPack];
-  const rune = pack?.runes[selectedRune];
-  const sortedRunes = useMemo(() => pack ? Object.entries(pack.runes).sort((a, b) => a[1].order - b[1].order) : [], [pack]);
-
-  const handlePackChange = (name) => {
-    setSelectedPack(name);
-    const sorted = Object.entries(RUNE_PACKS[name].runes).sort((a, b) => a[1].order - b[1].order);
-    setSelectedRune(sorted[sorted.length - 1][0]);
-    setResult(null);
-  };
-
-  const handleCalculate = useCallback(() => {
-    if (!rune) return;
-    const rps = parseSuffixNumber(rpsInput);
-    const luck = parseSuffixNumber(luckInput);
-    const count = parseSuffixNumber(currentCount) || 0;
-    if (isNaN(rps) || isNaN(luck) || rps <= 0 || luck <= 0) return;
-
-    const effectiveCapMult = getEffectiveCapMult(rune.rarity, capMults, pack?.isEvent, pack?.noCapMult);
-    const res = calculateTimeToMax({
-      rune, chance: rune.chance, currentCount: count,
-      baseRPS: rps, baseLuck: luck,
-      capMult: effectiveCapMult,
-    });
-    setResult(res);
-  }, [rune, rpsInput, luckInput, currentCount, capMults, selectedRune, selectedPack]);
-
-  return (
-    <>
-      {/* Pack selector */}
-      {[
-        { label: "Events", packs: ["1M Event", "Leprechaun", "Ascended"] },
-        { label: "Normal", packs: ["Slime", "Fire", "Plasma", "Snow", "Frost", "Snowflakes", "Stardust", "Comets", "Meteors", "Ash", "Lava"] },
-      ].map((group) => (
-        <div key={group.label} style={{ marginBottom: 12 }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "2px", textTransform: "uppercase", color: css.textDim, marginBottom: 6 }}>{group.label}</div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {group.packs.map((name) => {
-              const data = RUNE_PACKS[name]; if (!data) return null;
-              return (<button key={name} onClick={() => handlePackChange(name)} style={{ padding: "8px 14px", borderRadius: 8, whiteSpace: "nowrap", border: `1px solid ${selectedPack === name ? data.color + "60" : css.border}`, background: selectedPack === name ? data.color + "18" : css.surface, cursor: "pointer", fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, fontWeight: selectedPack === name ? 700 : 500, color: selectedPack === name ? data.color : css.textDim }}>{name}</button>);
-            })}
-          </div>
-        </div>
-      ))}
-
-      {/* Rune selector */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 6, marginBottom: 20 }}>
-        {sortedRunes.map(([name, data]) => {
-          const sel = name === selectedRune;
-          return (<button key={name} onClick={() => { setSelectedRune(name); setResult(null); }} style={{ background: sel ? data.color + "18" : css.surface, border: `1px solid ${sel ? data.color + "60" : css.border}`, borderRadius: 8, padding: "10px 6px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-            <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 11, fontWeight: sel ? 700 : 500, color: sel ? data.color : css.text, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
-            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: RARITY_COLORS[data.rarity], fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>{data.rarity}</span>
-            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: css.textDim }}>{formatChance(data.chance)}</span>
-          </button>);
-        })}
-      </div>
-
-      {/* Inputs */}
-      <div style={panelStyle}>
-        <div style={panelGlow} />
-        <div style={panelTitleStyle}>Your Stats</div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-          <div>
-            <label style={labelStyle}>Rolls Per Second (RPS)</label>
-            <input type="text" value={rpsInput} onChange={(e) => setRpsInput(e.target.value)} style={inputStyle} placeholder="e.g. 23NoVt or 1B" />
-          </div>
-          <div>
-            <label style={labelStyle}>Rune Luck</label>
-            <input type="text" value={luckInput} onChange={(e) => setLuckInput(e.target.value)} style={inputStyle} placeholder="e.g. 3.3Sx or 2.3e8" />
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Current Count</label>
-          <input type="text" value={currentCount} onChange={(e) => setCurrentCount(e.target.value)} style={inputStyle} placeholder="0" />
-        </div>
-
-        <button onClick={handleCalculate} style={{
-          width: "100%", padding: "14px", borderRadius: 8,
-          background: `linear-gradient(135deg, ${css.accent}, #1088cc)`,
-          border: "none", cursor: "pointer",
-          fontFamily: "'Chakra Petch', sans-serif", fontSize: 16,
-          fontWeight: 700, color: "#000", letterSpacing: "1px",
-        }}>CALCULATE TIME TO MAX</button>
-      </div>
-
-      {/* Results */}
-      {result && rune && (
-        <div style={panelStyle}>
-          <div style={panelGlow} />
-          <div style={panelTitleStyle}>Results — {selectedRune}</div>
-
-          <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>TIME TO MAX</div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Chakra Petch', sans-serif", color: result.time === 0 ? css.accent : result.time > 86400 * 365 * 100 ? css.red : css.textBright }}>
-                {result.time === 0 ? "Already maxed!" : formatTime(result.time)}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>TARGET COUNT</div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Chakra Petch', sans-serif", color: rune.color }}>
-                {formatNumber(result.maxCount)}
-              </div>
-            </div>
-          </div>
-
-          {/* Per-stat time breakdown */}
-          {result.statTimes && result.statTimes.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 8, letterSpacing: "1px" }}>STAT COMPLETION</div>
-              {result.statTimes.map((st, i) => (
-                <div key={i} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "8px 12px", marginBottom: 4,
-                  background: st.alreadyMaxed ? css.accentDim : css.bg,
-                  borderRadius: 6, border: `1px solid ${st.alreadyMaxed ? css.accent + "40" : css.border}`,
-                  opacity: st.excluded ? 0.5 : 1,
-                }}>
-                  <span style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 13, color: st.alreadyMaxed ? css.accent : css.textBright, fontWeight: 600, minWidth: 100 }}>
-                    {st.stat}
-                  </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: css.textDim }}>
-                    {st.maxBoostDisplay}
-                  </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim }}>
-                    {formatNumber(st.maxCount)} runes
-                  </span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: st.alreadyMaxed ? css.accent : st.excluded ? css.textDim : css.textBright, fontWeight: 600 }}>
-                    {st.alreadyMaxed ? "Maxed" : st.excluded ? ">30 days" : formatTime(st.time)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Rate info */}
-          {result.targetPerSec > 0 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, textAlign: "center", marginBottom: 16 }}>
-              <span>Current: {formatNumber(result.targetPerSec)}/sec · {formatNumber(result.targetPerSec * 3600)}/hr</span>
-              <span>Effective rarity: {formatChance(rune.chance / parseSuffixNumber(luckInput))}</span>
-            </div>
-          )}
-
-          {/* Hourly rate projection */}
-          {result.hourlyRates && result.hourlyRates.length > 1 && result.time > 3600 && (
-            <div>
-              <div style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 8, letterSpacing: "1px" }}>PROJECTED RATE</div>
-              {result.hourlyRates.map((hr, i) => {
-                const isLast = i === result.hourlyRates.length - 1;
-                const prevRate = i > 0 ? result.hourlyRates[i - 1].rate * 3600 : null;
-                const currRateHr = hr.rate * 3600;
-                const acceleration = prevRate ? ((currRateHr - prevRate) / prevRate * 100).toFixed(1) : null;
-                return (
-                  <div key={i} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    padding: "6px 12px", marginBottom: 2,
-                    background: css.bg,
-                    borderRadius: 6, border: `1px solid ${css.border}`,
-                  }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim, minWidth: 50 }}>
-                      {hr.hour === 0 ? "Now" : `${hr.hour}h`}
-                    </span>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textDim }}>
-                      {formatNumber(hr.count)} runes
-                    </span>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: css.textBright, fontWeight: 600 }}>
-                      {formatNumber(currRateHr)}/hr
-                    </span>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: acceleration && parseFloat(acceleration) > 0 ? css.accent : css.textDim, minWidth: 55, textAlign: "right" }}>
-                      {acceleration ? `+${acceleration}%` : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* How does this work */}
-      <div style={panelStyle}>
-        <div style={panelGlow} />
-        <div onClick={() => setShowHowItWorks(!showHowItWorks)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
-          <div style={{ ...panelTitleStyle, marginBottom: 0 }}>How Does This Work?</div>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, color: css.textDim, transition: "transform 0.2s", transform: showHowItWorks ? "rotate(180deg)" : "none" }}>▼</span>
-        </div>
-        {showHowItWorks && (
-          <div style={{ fontSize: 13, color: css.text, lineHeight: 1.8, fontFamily: "'Chakra Petch', sans-serif", marginTop: 16 }}>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Using the Calculator</div>
-              <p>Select the rune pack and specific rune you're farming. Enter your current RPS (visible in-game), your Rune Luck multiplier, and how many of that rune you currently have. Press calculate, and compare the displayed effective rarity with your in-game odds to verify your inputs are correct.</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>The Problem</div>
-              <p>Predicting time to max isn't as simple as dividing runes needed by runes per second. Many runes have boosts like Rune Bulk, Rune Luck, and Rune Speed, that compound as you gain more of that rune. Every rune you obtain makes you slightly faster at obtaining the next one, creating accelerating growth.</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>The Approach: Closed-Form Integration</div>
-              <p style={{ marginBottom: 10 }}>Your acquisition rate at any rune count is:</p>
-              <Latex block>{String.raw`r(n) = R_0 \cdot B(n) \cdot L(n) \cdot S(n)`}</Latex>
-              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
-                <div><Latex>{String.raw`r(n)`}</Latex> <span style={{ color: css.textDim }}>— runes gained per second at count </span><Latex>{String.raw`n`}</Latex></div>
-                <div><Latex>{String.raw`R_0`}</Latex> <span style={{ color: css.textDim }}>— base rate, your acquisition speed with all compounding boosts removed</span></div>
-                <div><Latex>{String.raw`n`}</Latex> <span style={{ color: css.textDim }}>— current number of the target rune you own</span></div>
-                <div><Latex>{String.raw`B(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Bulk multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
-                <div><Latex>{String.raw`L(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Luck multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
-                <div><Latex>{String.raw`S(n)`}</Latex> <span style={{ color: css.textDim }}>— Rune Speed multiplier at count </span><Latex>{String.raw`n`}</Latex></div>
-              </div>
-              <p style={{ marginBottom: 10 }}>Each compounding boost grows linearly with your rune count until it hits its cap:</p>
-              <Latex block>{String.raw`B(n) = \min(n \cdot p,\; C - 1) + 1`}</Latex>
-              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
-                <div><Latex>{String.raw`p`}</Latex> <span style={{ color: css.textDim }}>— per-rune boost value (e.g. 0.000076 for 1M Absolute's Rune Bulk)</span></div>
-                <div><Latex>{String.raw`C`}</Latex> <span style={{ color: css.textDim }}>— effective cap for this boost (base cap × progression multipliers)</span></div>
-              </div>
-              <p style={{ marginBottom: 10 }}>At <Latex>{String.raw`n = 0`}</Latex>, the boost is <Latex>{String.raw`1\times`}</Latex>. It grows linearly until <Latex>{String.raw`n \cdot p`}</Latex> reaches <Latex>{String.raw`C - 1`}</Latex>, at which point it's capped at <Latex>{String.raw`C\times`}</Latex>.</p>
-              <p style={{ marginBottom: 10 }}>To find the total time from count <Latex>{String.raw`A`}</Latex> to count <Latex>{String.raw`B`}</Latex>, we integrate the inverse of the rate:</p>
-              <Latex block>{String.raw`t = \int_{A}^{B} \frac{1}{r(n)}\, dn`}</Latex>
-              <p style={{ marginBottom: 10 }}>When two boosts share the same per-rune rate <Latex>{String.raw`p`}</Latex> (e.g. Rune Bulk and Rune Luck on 1M Absolute), the rate becomes a perfect square <Latex>{String.raw`R_0 \cdot (np + 1)^2`}</Latex>, giving a clean antiderivative:</p>
-              <Latex block>{String.raw`t = \frac{1}{R_0 \cdot p}\left[\frac{1}{Ap + 1} - \frac{1}{Bp + 1}\right]`}</Latex>
-              <p style={{ marginBottom: 10 }}>For two boosts with different growth rates <Latex>{String.raw`p_1`}</Latex> and <Latex>{String.raw`p_2`}</Latex>, we use partial fraction decomposition:</p>
-              <Latex block>{String.raw`t = \frac{1}{R_0(p_1 - p_2)}\left[\ln\!\frac{Bp_1 + 1}{Bp_2 + 1} - \ln\!\frac{Ap_1 + 1}{Ap_2 + 1}\right]`}</Latex>
-              <p>The result is exact. No simulation or approximation (as I did originally try before using integration).</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Handling Cap Boundaries</div>
-              <p>Different boosts cap at different rune counts. The calculator splits the integral at each cap boundary, solving a different equation for each segment. Before a cap, the boost accelerates your rate. After, it's constant. This means the time prediction naturally transitions from accelerating growth to linear growth as you approach and pass each cap.</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Base Rate Derivation</div>
-              <p style={{ marginBottom: 10 }}>We derive the base rate by factoring out the target rune's current compounding boost contribution from your inputs:</p>
-              <Latex block>{String.raw`R_0 = \frac{\text{RPS} \cdot \frac{1}{\text{chance}} \cdot \text{Luck}}{B(n_0) \cdot L(n_0) \cdot S(n_0)}`}</Latex>
-              <div style={{ background: css.bg, border: `1px solid ${css.border}`, borderRadius: 6, padding: "12px 16px", marginBottom: 12, fontSize: 12, lineHeight: 2 }}>
-                <div><Latex>{String.raw`\text{RPS}`}</Latex> <span style={{ color: css.textDim }}>— your rolls per second (includes clone, bulk, speed from all sources)</span></div>
-                <div><Latex>{String.raw`\text{chance}`}</Latex> <span style={{ color: css.textDim }}>— the rune's base rarity (e.g. 9×10¹⁷ for 1M Absolute)</span></div>
-                <div><Latex>{String.raw`\text{Luck}`}</Latex> <span style={{ color: css.textDim }}>— your total Rune Luck multiplier</span></div>
-                <div><Latex>{String.raw`n_0`}</Latex> <span style={{ color: css.textDim }}>— your current count of the target rune</span></div>
-              </div>
-              <p>Your RPS already includes Rune Bulk and Speed boosts, and your Luck already includes the Rune Luck boost from the target rune. We divide these out at your current count <Latex>{String.raw`n_0`}</Latex>, isolating <Latex>{String.raw`R_0`}</Latex>. The integral then accurately models them growing back as <Latex>{String.raw`n`}</Latex> increases.</p>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>Accuracy</div>
-              <p>This calculator was validated against real in-game data. The predicted rates match observed acquisition speeds within a few percent, as RNG naturally can not be perfectly predicted. The acceleration curve correctly models the compounding feedback loop. The projected hourly rates above show exactly how your speed increases over time as boosts compound.</p>
-            </div>
-
-            <div>
-              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: css.accent, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 6 }}>But wait, how do you even know what runes cap at?</div>
-              <p>Good question. For most runes you aren't able to figure that out on your own. Like, who would have known that 1M Absolute requires 400 trillion runes to max out the luck on it? I had to have help in order to figure out what runes cap at and their growth rate, that is where my friend Konami helped. </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-// ============================================================
-// MAIN
-// ============================================================
-
-function RuneCalculator() {
-  const [tab, setTab] = useState("boost");
-  const [reborn, setReborn] = useState(6);
-  const [challenge, setChallenge] = useState(4);
-  const [frostLevel, setFrostLevel] = useState(75);
-
-  const capMults = useMemo(() => getCapMultipliers(reborn, challenge, frostLevel), [reborn, challenge, frostLevel]);
-
-  const tabs = [
-    { id: "boost", label: "Boost Calculator", icon: "" },
-    { id: "time", label: "Time to Max", icon: "" },
-  ];
-
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const navItems = [
-    { label: "Rune Calculator", href: null, active: true },
-    { label: "Milestone Calculator", href: "https://pric3l3ss1.github.io/OmegaRarities2/MilestoneCalculator/", active: false },
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", background: css.bg, color: css.text, fontFamily: "'Chakra Petch', sans-serif", overflow: "auto" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-
-      {/* Sidebar overlay */}
-      {sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-          zIndex: 100,
-        }} />
-      )}
-
-      {/* Sidebar */}
-      <div style={{
-        position: "fixed", top: 0, left: sidebarOpen ? 0 : -260, bottom: 0,
-        width: 250, background: css.surface, borderRight: `1px solid ${css.border}`,
-        zIndex: 101, transition: "left 0.25s ease",
-        padding: "72px 16px 24px", display: "flex", flexDirection: "column", gap: 8,
-      }}>
-        <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-          letterSpacing: "2px", textTransform: "uppercase",
-          color: css.textDim, marginBottom: 12, paddingBottom: 12,
-          borderBottom: `1px solid ${css.border}`,
-        }}>
-          <a href="https://pric3l3ss1.github.io/OmegaRarities2/" style={{ color: css.textDim, textDecoration: "none" }}>
-            OR2 TOOLS
-          </a>
-        </div>
-        {navItems.map((item) => (
-          item.href ? (
-            <a key={item.label} href={item.href} style={{
-              display: "block", padding: "10px 14px", borderRadius: 8,
-              background: css.bg, border: `1px solid ${css.border}`,
-              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
-              fontWeight: 500, color: css.textDim,
-              textDecoration: "none", cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}>{item.label}</a>
-          ) : (
-            <div key={item.label} style={{
-              padding: "10px 14px", borderRadius: 8,
-              background: css.accentDim, border: `1px solid ${css.accent}40`,
-              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
-              fontWeight: 700, color: css.accent,
-            }}>{item.label}</div>
-          )
-        ))}
-      </div>
-
-      {/* Menu button */}
-      <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
-        position: "fixed", top: 16, left: sidebarOpen ? 200 : 16, zIndex: 102,
-        width: 40, height: 40, borderRadius: 8,
-        background: css.surface, border: `1px solid ${css.border}`,
-        cursor: "pointer", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: 5,
-        padding: 0, transition: "left 0.25s ease",
-      }}>
-        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", transform: sidebarOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
-        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", opacity: sidebarOpen ? 0 : 1 }} />
-        <div style={{ width: 18, height: 2, background: css.textDim, borderRadius: 1, transition: "all 0.2s", transform: sidebarOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
-      </button>
-
-      <div style={{ position: "fixed", inset: 0, backgroundImage: `linear-gradient(${css.border} 1px, transparent 1px), linear-gradient(90deg, ${css.border} 1px, transparent 1px)`, backgroundSize: "60px 60px", opacity: 0.08, pointerEvents: "none", zIndex: 0 }} />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 780, margin: "0 auto", padding: "32px 20px 60px" }}>
-
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ marginBottom: 14 }}>
-            <span style={{ display: "inline-block", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "2px", textTransform: "uppercase", color: css.accent, background: css.accentDim, border: `1px solid ${css.accent}`, borderRadius: 4, padding: "4px 12px" }}>OR2 TOOL BY PRICE AND KONAMI</span>
-          </div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: css.textBright, letterSpacing: "1px", lineHeight: 1.2, margin: 0 }}>
-            OR2 <span style={{ color: css.accent }}>Rune</span> Calculator
-          </h1>
-        </div>
-
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
-          {tabs.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              flex: 1, padding: "12px", borderRadius: 8,
-              border: `1px solid ${tab === t.id ? css.accent + "60" : css.border}`,
-              background: tab === t.id ? css.accentDim : css.surface,
-              cursor: "pointer",
-              fontFamily: "'Chakra Petch', sans-serif", fontSize: 14,
-              fontWeight: tab === t.id ? 700 : 500,
-              color: tab === t.id ? css.accent : css.textDim,
-              letterSpacing: "0.5px",
-            }}>{t.label}</button>
-          ))}
-        </div>
-
-        {/* Progression Settings */}
-        <div style={panelStyle}>
-          <div style={panelGlow} />
-          <div style={panelTitleStyle}>Your Progression</div>
-          <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div>
-              <label style={labelStyle}>Reborn Level</label>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[0, 1, 2, 3, 4, 5, 6].map((level) => (
-                  <button key={level} onClick={() => setReborn(level)} style={{
-                    width: 30, height: 30, borderRadius: 6,
-                    border: `1px solid ${reborn === level ? css.accent + "60" : css.border}`,
-                    background: reborn === level ? css.accent + "20" : css.bg,
-                    color: reborn === level ? css.accent : css.textDim,
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                    fontWeight: reborn === level ? 700 : 400, cursor: "pointer", padding: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>{level}</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label style={labelStyle}>Challenge</label>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[0, 1, 2, 3, 4].map((level) => (
-                  <button key={level} onClick={() => setChallenge(level)} style={{
-                    width: 30, height: 30, borderRadius: 6,
-                    border: `1px solid ${challenge === level ? "#ff78c860" : css.border}`,
-                    background: challenge === level ? "#ff78c820" : css.bg,
-                    color: challenge === level ? "#ff78c8" : css.textDim,
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                    fontWeight: challenge === level ? 700 : 400, cursor: "pointer", padding: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>{level}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <label style={labelStyle}>Frost Upgrade 6</label>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="range" min={0} max={75} value={frostLevel} onChange={(e) => setFrostLevel(parseInt(e.target.value))} style={{ flex: 1, height: 6, appearance: "none", borderRadius: 3, background: `linear-gradient(to right, ${css.accent} ${(frostLevel / 75) * 100}%, ${css.bg} ${(frostLevel / 75) * 100}%)`, outline: "none", cursor: "pointer" }} />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: css.accent, minWidth: 28, textAlign: "right" }}>{frostLevel}</span>
-              </div>
-              <span style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace" }}>x{(1 + frostLevel / 75).toFixed(2)} rune caps</span>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 16, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${css.border}` }}>
-            {[
-              { label: "Basic Cap", value: capMults.basicCap * capMults.allRunes },
-              { label: "Rare Cap", value: capMults.rareCap * capMults.allRunes },
-              { label: "Other Cap", value: capMults.allRunes },
-            ].map((item) => (
-              <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 10, color: css.textDim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "1px", textTransform: "uppercase" }}>{item.label}:</span>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, color: css.textDim }}>x{Number.isInteger(item.value) ? item.value : item.value.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab content */}
-        {tab === "boost" && <BoostCalculator capMults={capMults} />}
-        {tab === "time" && <TimeToMaxCalculator capMults={capMults} />}
-
-        {/* Footer */}
-        <div style={{ marginTop: 32, textAlign: "center", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: css.textDim, lineHeight: 1.8 }}>
-          Caps scale with Reborn level, Challenge tier & Frost Upgrade 6
+<!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header"><a href="https://pric3l3ss1.github.io/OmegaRarities2/">OR2 TOOLS</a></div>
+  <a href="https://pric3l3ss1.github.io/OmegaRarities2/RuneCalculator/" class="sidebar-link">Rune Calculator</a>
+  <div class="sidebar-active">Milestone Calculator</div>
+</div>
+<button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">
+  <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+</button>
+
+<div class="app">
+  <div class="header">
+    <div style="margin-bottom:14px;"><div class="tag">OR2 TOOL BY PRICE AND SUBARU</div></div>
+    <h1>OR2 <span>Milestone</span> Calculator</h1>
+    <p>Track progress and estimate time for all milestone types</p>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('rareRunes')">Rare Runes</button>
+    <button class="tab-btn" onclick="switchTab('runesRolled')">Runes Rolled</button>
+    <button class="tab-btn" onclick="switchTab('luck')">Luck</button>
+    <button class="tab-btn" onclick="switchTab('time')">Time Played</button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RARE RUNES TAB -->
+  <!-- ============================================================ -->
+  <div id="tab-rareRunes">
+
+    <!-- Tutorial Modal -->
+    <div class="hidden" id="tutorialModal" onclick="if(event.target===this)toggleTutorial()" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--surface);border:1px solid var(--border-glow);border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:28px;position:relative;scrollbar-width:thin;scrollbar-color:var(--border) transparent;">
+        <button onclick="toggleTutorial()" style="position:absolute;top:16px;right:16px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:18px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">x</button>
+        <h2 style="font-size:20px;color:var(--text-bright);margin-bottom:16px;">How to Use This Tool</h2>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">What You Need</h3>
+        <ol style="padding-left:20px;font-size:13px;color:var(--text);line-height:1.7;">
+          <li style="margin-bottom:8px;">Go to <span style="color:var(--accent);font-weight:600;">Settings</span> and <span style="color:var(--yellow);font-weight:600;">disable Rune Luck</span>.</li>
+          <li style="margin-bottom:8px;">Enter your <span style="color:var(--accent);font-weight:600;">RPS</span> (visible on screen), your current rare rune milestone tier, your <span style="color:var(--accent);font-weight:600;">Rune Bulk</span> (from your Profile), and your <span style="color:var(--accent);font-weight:600;">Rune Clone</span> count.</li>
+          <li style="margin-bottom:8px;">Set your bulk to the amount it shows, and farm the rune it says to farm. (e.g., Genesis Slime)</li>
+        </ol>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Tier Projections</h3>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">Each rare rune milestone tier increases your Rune Speed by 1.13×. The projections table shows what your perfect bulk will be at each future tier, accounting for the speed increase. You should update your bulk after tiering up if your rare rune milestone is no longer increasing.</p>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Thank you</h3>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">Thank you Subaru for helping me make this calculator way more efficient.</p>
+
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:12px 0;font-size:12px;color:var(--text-dim);line-height:1.6;">
+          <strong style="color:var(--yellow);">Important:</strong> Make sure to press ENTER after typing your bulk, otherwise it won't save.
         </div>
       </div>
     </div>
-  );
+
+    <div class="panel">
+      <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Configuration</span>
+        <button onclick="toggleTutorial()" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;">? How to Use</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Disable Rune Luck in settings, then enter your stats from the Slime rune pack.</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Runes Per Second (RPS)</label>
+          <input type="text" id="rr-rps" placeholder="e.g. 1.26e123" autocomplete="off" oninput="rrCalc()">
+        </div>
+        <div class="input-group">
+          <label>Rune Bulk</label>
+          <input type="text" id="rr-bulk" placeholder="e.g. 269.88SpVt" autocomplete="off" oninput="rrCalc()">
+        </div>
+        <div class="input-group" style="flex:0.4">
+          <label>Rune Clone</label>
+          <input type="text" id="rr-clone" placeholder="e.g. 509" autocomplete="off" oninput="rrCalc()">
+        </div>
+      </div>
+      <div class="input-row" style="margin-top:12px;">
+        <div class="input-group" style="flex:0.4">
+          <label>Current Rare Rune Milestone Tier</label>
+          <input type="text" placeholder="e.g. 15" id="rr-tierInput" value="" autocomplete="off" oninput="rrCalc()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="hidden" id="rr-resultPanel">
+      <div class="summary-banner" id="rr-resultBanner"></div>
+      <div class="panel">
+        <div class="panel-title">Projected Bulk Per Tier</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier multiplies rune speed by 1.13×, so your perfect bulk decreases at each tier-up.</div>
+        <div class="tier-table" id="rr-projectionsTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RUNES ROLLED TAB -->
+  <!-- ============================================================ -->
+  <div id="tab-runesRolled" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Configuration</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Current Runes Rolled</label>
+          <input type="text" id="rolled-current" placeholder="e.g. 6.4e96" autocomplete="off" oninput="rolledCalc()">
+        </div>
+        <div class="input-group">
+          <label>Runes Per Second (RPS)</label>
+          <input type="text" id="rolled-rps" placeholder="e.g. 2.8B" autocomplete="off" oninput="rolledCalc()">
+        </div>
+      </div>
+    </div>
+    <div id="rolled-results">
+      <div class="summary-banner" id="rolled-summary"></div>
+      <div class="panel">
+        <div class="panel-title">Tier Breakdown</div>
+        <div class="tier-table" id="rolled-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- LUCK TAB -->
+  <!-- ============================================================ -->
+  <div id="tab-luck" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Configuration</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Current Rarity</label>
+          <input type="text" id="luck-rarity" placeholder="e.g. 739" autocomplete="off" oninput="luckCalc()">
+        </div>
+      </div>
+    </div>
+    <div id="luck-results">
+      <div class="summary-banner" id="luck-summary"></div>
+      <div class="panel">
+        <div class="panel-title">Tier Breakdown</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier requires a specific rarity level. Boost: 3^(tier-1) Luck multiplier.</div>
+        <div class="tier-table" id="luck-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TIME PLAYED TAB -->
+  <!-- ============================================================ -->
+  <div id="tab-time" class="hidden">
+    <div class="panel">
+      <div class="panel-title">Configuration</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Time Played (e.g. 10d8h43m8s, or 857342)</label>
+          <input type="text" id="time-current" placeholder="e.g. 10d8h43m or 857342" autocomplete="off" oninput="timeCalc()">
+        </div>
+      </div>
+    </div>
+    <div id="time-results">
+      <div class="summary-banner" id="time-summary"></div>
+      <div class="panel">
+        <div class="panel-title">Tier Breakdown</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier grants +1 Walkspeed. Fixed time thresholds.</div>
+        <div class="tier-table" id="time-table"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// SHARED UTILS
+// ============================================================
+const SUFFIXES = [
+  ['NoQg', 1e150], ['OcQg', 1e147], ['SpQg', 1e144], ['SxQg', 1e141],
+  ['QnQg', 1e138], ['QaQg', 1e135], ['TQg', 1e132], ['DQg', 1e129],
+  ['UQg', 1e126], ['Qg', 1e123],
+  ['NoTg', 1e120], ['OcTg', 1e117], ['SpTg', 1e114], ['SxTg', 1e111],
+  ['QnTg', 1e108], ['QaTg', 1e105], ['TTg', 1e102], ['DTg', 1e99],
+  ['UTg', 1e96], ['Tg', 1e93],
+  ['NoVt', 1e90], ['OcVt', 1e87], ['SpVt', 1e84], ['SxVt', 1e81],
+  ['QnVt', 1e78], ['QaVt', 1e75],
+  ['TVt', 1e72], ['DVt', 1e69], ['UVt', 1e66], ['Vt', 1e63],
+  ['NoDe', 1e60], ['OcDe', 1e57], ['SpDe', 1e54], ['SxDe', 1e51],
+  ['QnDe', 1e48], ['QdDe', 1e45], ['TDe', 1e42], ['DDe', 1e39],
+  ['UDe', 1e36], ['De', 1e33], ['No', 1e30], ['Oc', 1e27],
+  ['Sp', 1e24], ['Sx', 1e21], ['Qn', 1e18], ['Qd', 1e15],
+  ['T', 1e12], ['B', 1e9], ['M', 1e6], ['K', 1e3],
+];
+
+function parseShort(str) {
+  str = (str || '').trim();
+  if (!str) return NaN;
+  if (/^[\d.]+e[+\-]?\d+$/i.test(str)) return parseFloat(str);
+  for (const [suf, mul] of SUFFIXES) {
+    const re = new RegExp('^([\\d.]+)\\s*' + suf + '$', 'i');
+    const m = str.match(re);
+    if (m) return parseFloat(m[1]) * mul;
+  }
+  return parseFloat(str);
 }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(RuneCalculator));
-  </script>
+function toShort(n) {
+  if (n === 0) return '0';
+  if (n < 0) return '-' + toShort(-n);
+  for (const [suf, mul] of SUFFIXES) {
+    if (n >= mul) return (n / mul).toFixed(2).replace(/\.?0+$/, '') + suf;
+  }
+  if (n >= 1) return n.toFixed(2).replace(/\.?0+$/, '');
+  return n.toExponential(2);
+}
+
+function toSci(n) {
+  if (n === 0) return '0';
+  return n.toExponential(4);
+}
+
+function formatDuration(seconds) {
+  if (!isFinite(seconds) || seconds <= 0) return '—';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (d > 365) return Math.floor(d / 365) + 'y ' + (d % 365) + 'd';
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+  document.getElementById('menuBtn').classList.toggle('open');
+}
+
+function toggleTutorial() {
+  const modal = document.getElementById('tutorialModal');
+  if (modal.classList.contains('hidden')) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  } else {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.remove('hidden');
+  event.target.classList.add('active');
+}
+
+// ============================================================
+// RARE RUNES — Direct bulk calculator
+// ============================================================
+const RARE_RUNE_TIERS = [
+  { name: 'Prismatic Slime', constant: 3.5625e13 },
+  { name: 'Deep Freeze', constant: 3.5625e22 },
+  { name: 'Genesis Slime', constant: 2.700118e40 },
+];
+
+function rrCalc() {
+  const rps = parseShort(document.getElementById('rr-rps').value) || 0;
+  const bulk = parseShort(document.getElementById('rr-bulk').value) || 0;
+  const clone = parseInt(document.getElementById('rr-clone').value) || 0;
+  const currentTier = parseInt(document.getElementById('rr-tierInput').value) || 1;
+
+  const resultPanel = document.getElementById('rr-resultPanel');
+  const banner = document.getElementById('rr-resultBanner');
+  const table = document.getElementById('rr-projectionsTable');
+
+  if (rps <= 0 || bulk <= 0 || clone <= 0) {
+    resultPanel.classList.add('hidden');
+    return;
+  }
+
+  const speed = rps / bulk / clone;
+
+  // Determine which rare rune to target based on speed
+  let target;
+  if (speed < RARE_RUNE_TIERS[0].constant) {
+    target = RARE_RUNE_TIERS[0];
+  } else if (speed < RARE_RUNE_TIERS[1].constant) {
+    target = RARE_RUNE_TIERS[1];
+  } else {
+    target = RARE_RUNE_TIERS[2];
+  }
+
+  const perfectBulk = Math.floor(target.constant / speed);
+  const cloneVal = parseInt(document.getElementById('rr-clone').value) || 1;
+  const raresPerSec = cloneVal / 30; // ~1 rare rune per 30 secs per clone
+
+  resultPanel.classList.remove('hidden');
+  banner.innerHTML = `
+    <div class="label">Set Your Bulk To</div>
+    <div class="value">${perfectBulk}</div>
+    <div class="sub">for ${target.name} · Speed: ${toShort(speed)}/s · ~${(raresPerSec * 60).toFixed(1)} rare/min</div>
+  `;
+
+  // Build tier projections
+  table.innerHTML = '';
+  const header = document.createElement('div');
+  header.className = 'tier-row header-row';
+  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Perfect Bulk</span><span class="tier-col tier-boost">Runes Needed</span><span class="tier-col tier-rps">Rune</span><span class="tier-col tier-time">Time</span>';
+  table.appendChild(header);
+
+  const currentSpeedMulti = Math.pow(1.13, currentTier - 1);
+  // If at tier 18, you've completed T18 and have round(2 * 1.5^17) rare runes
+  const currentThreshold = currentTier > 1 ? Math.round(2 * Math.pow(1.5, currentTier - 1)) : 0;
+
+  for (let t = currentTier; t <= Math.min(currentTier + 12, 30); t++) {
+    const tierMulti = Math.pow(1.13, t - 1);
+    const tierSpeed = speed * tierMulti / currentSpeedMulti;
+
+    let tierTarget;
+    if (tierSpeed < RARE_RUNE_TIERS[0].constant) {
+      tierTarget = RARE_RUNE_TIERS[0];
+    } else if (tierSpeed < RARE_RUNE_TIERS[1].constant) {
+      tierTarget = RARE_RUNE_TIERS[1];
+    } else {
+      tierTarget = RARE_RUNE_TIERS[2];
+    }
+
+    const tierBulk = Math.floor(tierTarget.constant / tierSpeed);
+
+    // Threshold to reach this tier = round(2 * 1.5^(t-1))
+    // Total runes needed from where we are now
+    const tierThreshold = Math.round(2 * Math.pow(1.5, t - 1));
+    const runesFromCurrent = tierThreshold - currentThreshold;
+    const timeFromNow = runesFromCurrent / raresPerSec;
+
+    // Incremental runes for display
+    const prevThreshold = t > 1 ? Math.round(2 * Math.pow(1.5, t - 2)) : 0;
+    const runesIncremental = tierThreshold - prevThreshold;
+
+    const row = document.createElement('div');
+    row.className = 'tier-row' + (t === currentTier ? ' current' : '');
+
+    if (t === 30) {
+      row.innerHTML = `
+        <span class="tier-col tier-num"><strong>T${t}</strong></span>
+        <span class="tier-col tier-req" style="color:var(--accent);">MAX</span>
+        <span class="tier-col tier-boost">—</span>
+        <span class="tier-col tier-rps">—</span>
+        <span class="tier-col tier-time" style="color:var(--accent);">${t === currentTier ? 'Complete' : '—'}</span>
+      `;
+    } else {
+      row.innerHTML = `
+        <span class="tier-col tier-num"><strong>T${t}</strong></span>
+        <span class="tier-col tier-req">${tierBulk}</span>
+        <span class="tier-col tier-boost">${runesIncremental}</span>
+        <span class="tier-col tier-rps">${tierTarget.name}</span>
+        <span class="tier-col tier-time">${t === currentTier ? 'Current' : formatDuration(timeFromNow)}</span>
+      `;
+    }
+    table.appendChild(row);
+  }
+}
+
+// ============================================================
+// RUNES ROLLED
+// ============================================================
+function rolledReq(tier) { return 100 * Math.pow(1.4, tier - 1); }
+function rolledBoost(tier) { return Math.pow(1.1, tier - 1); }
+
+function rolledCalc() {
+  const currentRolled = parseShort(document.getElementById('rolled-current').value) || 0;
+  const rps = parseShort(document.getElementById('rolled-rps').value) || 0;
+
+  const table = document.getElementById('rolled-table');
+  const summary = document.getElementById('rolled-summary');
+  table.innerHTML = '';
+
+  // Find actual current tier based on runes rolled
+  let actualTier = 1;
+  for (let t = 1; t <= 1000; t++) {
+    if (currentRolled >= rolledReq(t)) actualTier = t + 1;
+    else break;
+  }
+
+  // Factor out current tier's boost to get base RPS
+  const currentBoost = rolledBoost(actualTier);
+  const baseRPS = rps > 0 ? rps / currentBoost : 0;
+
+  // Time to next tier uses current RPS (no tier-up yet)
+  const nextReq = rolledReq(actualTier);
+  const remaining = Math.max(0, nextReq - currentRolled);
+  const timeToNext = rps > 0 ? remaining / rps : Infinity;
+
+  if (currentRolled > 0) {
+    summary.innerHTML = `
+      <div class="label">Current Tier</div>
+      <div class="value">${actualTier}</div>
+      <div class="sub">Boost: x${toShort(currentBoost)} Rune Bulk${rps > 0 ? ' · Next tier in ' + formatDuration(timeToNext) : ''}</div>
+    `;
+    summary.style.display = '';
+  } else {
+    summary.style.display = 'none';
+  }
+
+  const header = document.createElement('div');
+  header.className = 'tier-row header-row';
+  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Runes Required</span><span class="tier-col tier-boost">Boost</span>' + (baseRPS > 0 ? '<span class="tier-col tier-rps">RPS After</span>' : '') + '<span class="tier-col tier-time">Time</span>';
+  table.appendChild(header);
+
+  const startTier = currentRolled > 0 ? Math.max(1, actualTier - 2) : 1;
+  const endTier = currentRolled > 0 ? Math.min(actualTier + 15, 1000) : 20;
+
+  // Calculate cumulative time accounting for RPS increasing at each tier
+  // For tiers already completed, show "Done"
+  // For current tier, use current RPS for remaining runes
+  // For future tiers, RPS = baseRPS * 1.1^(tier-1) and runes needed = rolledReq(tier)
+  let cumulativeTime = 0;
+
+  // Time to finish current tier
+  if (rps > 0 && currentRolled > 0 && currentRolled < nextReq) {
+    cumulativeTime = remaining / rps;
+  }
+
+  // Precompute cumulative times for future tiers
+  const tierTimes = {};
+  tierTimes[actualTier] = cumulativeTime;
+
+  for (let t = actualTier + 1; t <= endTier; t++) {
+    const rpsAtTier = baseRPS * rolledBoost(t);
+    const runesForTier = rolledReq(t);
+    // After reaching tier t, we need rolledReq(t) total runes to reach tier t+1
+    // But we already have rolledReq(t-1) worth from previous tier
+    // Actually, requirement is cumulative — rolledReq(t) is the threshold to reach tier t+1
+    // Runes needed between tier t and t+1 = rolledReq(t) - rolledReq(t-1)
+    // But the RPS during this phase is baseRPS * boost(t) since we're at tier t
+    const runesBetween = rolledReq(t) - rolledReq(t - 1);
+    const timeForSegment = rpsAtTier > 0 ? runesBetween / rpsAtTier : Infinity;
+    cumulativeTime += timeForSegment;
+    tierTimes[t] = cumulativeTime;
+  }
+
+  for (let t = startTier; t <= endTier; t++) {
+    const req = rolledReq(t);
+    const boost = rolledBoost(t);
+    const completed = currentRolled >= req;
+
+    let timeDisplay;
+    if (completed) {
+      timeDisplay = 'Done';
+    } else if (rps > 0 && tierTimes[t] !== undefined) {
+      timeDisplay = formatDuration(tierTimes[t]);
+    } else if (rps > 0) {
+      // For tiers before actualTier that aren't completed (shouldn't happen)
+      timeDisplay = '—';
+    } else {
+      timeDisplay = toShort(req);
+    }
+
+    const rpsAtThisTier = baseRPS * boost;
+    const rpsDisplay = baseRPS > 0 ? `<span class="tier-col tier-rps">${toShort(rpsAtThisTier)}/s</span>` : '';
+
+    const row = document.createElement('div');
+    row.className = 'tier-row' + (t === actualTier && currentRolled > 0 ? ' current' : '') + (completed ? ' completed' : '');
+    row.innerHTML = `
+      <span class="tier-col tier-num"><strong>T${t}</strong></span>
+      <span class="tier-col tier-req">${toShort(req)}</span>
+      <span class="tier-col tier-boost">x${toShort(boost)}</span>
+      ${rpsDisplay}
+      <span class="tier-col tier-time ${completed ? 'done' : ''}">${timeDisplay}</span>
+    `;
+    table.appendChild(row);
+  }
+}
+
+// ============================================================
+// LUCK (RARITY)
+// ============================================================
+function luckReq(tier) { return tier * 5; }
+function luckBoost(tier) { return Math.pow(3, tier - 1); }
+
+function luckCalc() {
+  const currentRarity = parseInt(document.getElementById('luck-rarity').value) || 0;
+
+  const table = document.getElementById('luck-table');
+  const summary = document.getElementById('luck-summary');
+  table.innerHTML = '';
+
+  // Derive tier from rarity: requirement is tier * 5, so tier = floor(rarity / 5)
+  let actualTier = Math.min(Math.floor(currentRarity / 5) + 1, 101);
+  if (currentRarity <= 0) actualTier = 1;
+
+  const nextReq = actualTier <= 100 ? luckReq(actualTier) : null;
+  const remaining = nextReq ? Math.max(0, nextReq - currentRarity) : 0;
+
+  if (currentRarity > 0) {
+    summary.innerHTML = `
+      <div class="label">Current Tier</div>
+      <div class="value">${Math.min(actualTier, 100)}</div>
+      <div class="sub">Boost: x${toShort(luckBoost(Math.min(actualTier, 100)))} Luck · ${actualTier > 100 ? 'All tiers complete!' : 'Need rarity ' + nextReq + ' for next tier (' + remaining + ' more)'}</div>
+    `;
+    summary.style.display = '';
+  } else {
+    summary.style.display = 'none';
+  }
+
+  const header = document.createElement('div');
+  header.className = 'tier-row header-row';
+  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Rarity Required</span><span class="tier-col tier-boost">Luck Boost</span><span class="tier-col tier-time">Status</span>';
+  table.appendChild(header);
+
+  const startTier = currentRarity > 0 ? Math.max(1, actualTier - 3) : 1;
+  const endTier = currentRarity > 0 ? Math.min(actualTier + 15, 100) : 20;
+
+  for (let t = startTier; t <= endTier; t++) {
+    const req = luckReq(t);
+    const boost = luckBoost(t);
+    const completed = currentRarity >= req;
+
+    const row = document.createElement('div');
+    row.className = 'tier-row' + (t === actualTier && currentRarity > 0 ? ' current' : '') + (completed ? ' completed' : '');
+    row.innerHTML = `
+      <span class="tier-col tier-num"><strong>T${t}</strong></span>
+      <span class="tier-col tier-req">Rarity ${req}</span>
+      <span class="tier-col tier-boost">x${toShort(boost)}</span>
+      <span class="tier-col tier-time ${completed ? 'done' : ''}">${completed ? 'Done' : currentRarity > 0 ? 'Need ' + (req - currentRarity) + ' more' : 'Rarity ' + req}</span>
+    `;
+    table.appendChild(row);
+  }
+}
+
+// ============================================================
+// TIME PLAYED
+// ============================================================
+const TIME_REQS = [600, 1800, 3600, 7200, 18000, 36000, 86400, 172800, 259200, 360000, 604800, 1080000];
+
+function parseTimeString(str) {
+  str = (str || '').trim();
+  if (!str) return 0;
+
+  // Try as pure number or suffix number first
+  const asNum = parseShort(str);
+  if (!isNaN(asNum) && /^[\d.eE+\-]+$/.test(str)) return asNum;
+  // Try suffix format (e.g. "857K")
+  if (!isNaN(asNum) && asNum > 0 && !/[dhms]/i.test(str)) return asNum;
+
+  // Parse time string like "10d8h43m8s" or "2d 5h" or "30m"
+  let total = 0;
+  const dayMatch = str.match(/([\d.]+)\s*d/i);
+  const hourMatch = str.match(/([\d.]+)\s*h/i);
+  const minMatch = str.match(/([\d.]+)\s*m(?!s)/i); // m but not ms
+  const secMatch = str.match(/([\d.]+)\s*s/i);
+
+  if (dayMatch) total += parseFloat(dayMatch[1]) * 86400;
+  if (hourMatch) total += parseFloat(hourMatch[1]) * 3600;
+  if (minMatch) total += parseFloat(minMatch[1]) * 60;
+  if (secMatch) total += parseFloat(secMatch[1]);
+
+  // If none matched but it's a number, treat as seconds
+  if (total === 0 && !isNaN(parseFloat(str))) return parseFloat(str);
+
+  return total;
+}
+
+function timeCalc() {
+  const currentTime = parseTimeString(document.getElementById('time-current').value);
+
+  const table = document.getElementById('time-table');
+  const summary = document.getElementById('time-summary');
+  table.innerHTML = '';
+
+  // Find actual tier
+  let actualTier = 0;
+  for (let t = 0; t < TIME_REQS.length; t++) {
+    if (currentTime >= TIME_REQS[t]) actualTier = t + 1;
+    else break;
+  }
+
+  const nextReq = actualTier < TIME_REQS.length ? TIME_REQS[actualTier] : null;
+  const remaining = nextReq ? Math.max(0, nextReq - currentTime) : 0;
+
+  if (currentTime > 0) {
+    summary.innerHTML = `
+      <div class="label">Current Tier</div>
+      <div class="value">${actualTier + 1}</div>
+      <div class="sub">Boost: +${actualTier} Walkspeed · ${nextReq ? 'Next tier in ' + formatDuration(remaining) : 'All tiers complete!'}</div>
+    `;
+    summary.style.display = '';
+  } else {
+    summary.style.display = 'none';
+  }
+
+  const header = document.createElement('div');
+  header.className = 'tier-row header-row';
+  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Time Required</span><span class="tier-col tier-boost">Walkspeed</span><span class="tier-col tier-time">Status</span>';
+  table.appendChild(header);
+
+  for (let t = 0; t < TIME_REQS.length; t++) {
+    const req = TIME_REQS[t];
+    const completed = currentTime >= req;
+    const rem = Math.max(0, req - currentTime);
+
+    const row = document.createElement('div');
+    row.className = 'tier-row' + (t === actualTier && currentTime > 0 ? ' current' : '') + (completed ? ' completed' : '');
+    row.innerHTML = `
+      <span class="tier-col tier-num"><strong>T${t + 1}</strong></span>
+      <span class="tier-col tier-req">${formatDuration(req)}</span>
+      <span class="tier-col tier-boost">+${t + 1}</span>
+      <span class="tier-col tier-time ${completed ? 'done' : ''}">${completed ? 'Done' : currentTime > 0 ? formatDuration(rem) + ' left' : formatDuration(req)}</span>
+    `;
+    table.appendChild(row);
+  }
+}
+
+// Render time table on load
+document.addEventListener('DOMContentLoaded', function() { timeCalc(); luckCalc(); rolledCalc(); });
+</script>
 </body>
 </html>
