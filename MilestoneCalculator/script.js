@@ -1,13 +1,9 @@
 
 const SUFFIXES = [
-  ['NoQg', 1e150], ['OcQg', 1e147], ['SpQg', 1e144], ['SxQg', 1e141],
-  ['QnQg', 1e138], ['QaQg', 1e135], ['TQg', 1e132], ['DQg', 1e129],
-  ['UQg', 1e126], ['Qg', 1e123],
-  ['NoTg', 1e120], ['OcTg', 1e117], ['SpTg', 1e114], ['SxTg', 1e111],
-  ['QnTg', 1e108], ['QaTg', 1e105], ['TTg', 1e102], ['DTg', 1e99],
+  ['DTg', 1e99],
   ['UTg', 1e96], ['Tg', 1e93],
   ['NoVt', 1e90], ['OcVt', 1e87], ['SpVt', 1e84], ['SxVt', 1e81],
-  ['QnVt', 1e78], ['QaVt', 1e75],
+  ['QnVt', 1e78], ['QdVt', 1e75],
   ['TVt', 1e72], ['DVt', 1e69], ['UVt', 1e66], ['Vt', 1e63],
   ['NoDe', 1e60], ['OcDe', 1e57], ['SpDe', 1e54], ['SxDe', 1e51],
   ['QnDe', 1e48], ['QdDe', 1e45], ['TDe', 1e42], ['DDe', 1e39],
