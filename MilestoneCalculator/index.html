@@ -401,7 +401,7 @@
 
 <div class="app">
   <div class="header">
-    <div style="margin-bottom:14px;"><div class="tag">OR2 TOOL BY PRICE AND KONAMI</div></div>
+    <div style="margin-bottom:14px;"><div class="tag">OR2 TOOL BY PRICE AND SUBARU</div></div>
     <h1>OR2 <span>Milestone</span> Calculator</h1>
     <p>Track progress and estimate time for all milestone types</p>
   </div>
@@ -425,38 +425,22 @@
         <button onclick="toggleTutorial()" style="position:absolute;top:16px;right:16px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:18px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;">x</button>
         <h2 style="font-size:20px;color:var(--text-bright);margin-bottom:16px;">How to Use This Tool</h2>
 
-        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Before You Start</h3>
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">What You Need</h3>
         <ol style="padding-left:20px;font-size:13px;color:var(--text);line-height:1.7;">
           <li style="margin-bottom:8px;">Go to <span style="color:var(--accent);font-weight:600;">Settings</span> and <span style="color:var(--yellow);font-weight:600;">disable Rune Luck</span>.</li>
-          <li style="margin-bottom:8px;">Set your rune to <span style="color:var(--accent);font-weight:600;">Slime Rune</span> — the rare rune you're farming for is <span style="color:var(--accent);font-weight:600;">Genesis Slime</span>. This method works for most runes, but Slime is the go-to.</li>
-          <li style="margin-bottom:8px;">Go to your <span style="color:var(--accent);font-weight:600;">Profile</span> and find your <span style="color:var(--accent);font-weight:600;">Rune Bulk</span> amount. This is your starting bulk.</li>
-          <li style="margin-bottom:8px;">Enter your starting bulk and your current rare rune milestone tier into the tool.</li>
+          <li style="margin-bottom:8px;">Enter your <span style="color:var(--accent);font-weight:600;">RPS</span> (visible on screen), your current rare rune milestone tier, your <span style="color:var(--accent);font-weight:600;">Rune Bulk</span> (from your Profile), and your <span style="color:var(--accent);font-weight:600;">Rune Clone</span> count.</li>
+          <li style="margin-bottom:8px;">Set your bulk to the amount it shows, and farm the rune it says to farm. (e.g., Genesis Slime)</li>
         </ol>
-
-        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">The Search Process</h3>
-        <p style="font-size:13px;color:var(--text);line-height:1.7;">We're looking for the exact bulk that produces runes at 1/50,000. This tool uses binary search to find it efficiently.</p>
-        <ol style="padding-left:20px;font-size:13px;color:var(--text);line-height:1.7;margin-top:8px;">
-          <li style="margin-bottom:8px;">Click <span style="color:var(--accent);font-weight:600;">Start Search</span>. The tool will give you a bulk amount to test.</li>
-          <li style="margin-bottom:8px;"><span style="color:var(--accent);font-weight:600;">Copy</span> the bulk value and change your bulk amount to it.</li>
-          <li style="margin-bottom:8px;">Try farming runes for a bit, then report the result:
-            <ul style="margin-top:6px;padding-left:16px;">
-              <li><span style="color:var(--yellow);font-weight:600;">Too Low</span> — You couldn't get the rare rune at all after a minute. Bulk is too small.</li>
-              <li><span style="color:var(--yellow);font-weight:600;">Too High</span> — You got the rare rune, but it didn't count toward your milestone. Bulk is too large.</li>
-              <li><span style="color:var(--accent);font-weight:600;">Perfect</span> — You got the rare rune AND it counted toward your milestone! This is the sweet spot.</li>
-            </ul>
-          </li>
-          <li style="margin-bottom:8px;">Repeat until you find the perfect bulk. A "perfect" bulk means you're getting a rare rune counted towards your milestone every 30-40 seconds.</li>
-        </ol>
-
-        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:12px 0;font-size:12px;color:var(--text-dim);line-height:1.6;">
-          <strong style="color:var(--yellow);">Tip:</strong> After hitting "Perfect", you can click "Refine" to narrow it down even further if you want extra precision. The first "Perfect" is usually good enough though.
-        </div>
 
         <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Tier Projections</h3>
-        <p style="font-size:13px;color:var(--text);line-height:1.7;">Once you find your perfect bulk, the tool automatically calculates what your bulk should be for the upcoming tiers. Each milestone tier-up increases your rune speed by 1.13x, so your bulk needs to decrease by the same factor to stay at the sweet spot.</p>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">Each rare rune milestone tier increases your Rune Speed by 1.13×. The projections table shows what your perfect bulk will be at each future tier, accounting for the speed increase. You should update your bulk after tiering up if your rare rune milestone is no longer increasing.</p>
+
+        <h3 style="font-size:14px;color:var(--accent);margin:18px 0 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Thank you</h3>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;">Thank you Subaru for helping me make this calculator way more efficient.</p>
+
 
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:12px 0;font-size:12px;color:var(--text-dim);line-height:1.6;">
-          <strong style="color:var(--yellow);">Returning user?</strong> If you already know your bulk, use the "Returning User" section. Enter your known bulk and tier to see the projection table.
+          <strong style="color:var(--yellow);">Important:</strong> Make sure to press ENTER after typing your bulk, otherwise it won't save.
         </div>
       </div>
     </div>
@@ -466,103 +450,36 @@
         <span>Configuration</span>
         <button onclick="toggleTutorial()" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text-dim);cursor:pointer;letter-spacing:0.5px;">? How to Use</button>
       </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Disable Rune Luck in settings, then enter your stats from the Slime rune pack.</div>
       <div class="input-row">
         <div class="input-group">
-          <label>Starting Bulk Amount</label>
-          <input type="text" id="rr-startInput" placeholder="e.g. 721.9Vt" autocomplete="off">
+          <label>Runes Per Second (RPS)</label>
+          <input type="text" id="rr-rps" placeholder="e.g. 1.26e123" autocomplete="off" oninput="rrCalc()">
         </div>
-        <div class="input-group" style="flex:0.55">
-          <label>Current Tier</label>
-          <input type="text" id="rr-tierInput" value="1" autocomplete="off">
-        </div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:10px;">
-        <button class="btn btn-primary" onclick="rrStartSearch()">Start Search</button>
-      </div>
-      <div style="height:1px;background:var(--border);margin:20px 0;"></div>
-      <div class="panel-title" style="margin-bottom:8px;">Returning User</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">Already know your perfect bulk? Enter it below.</div>
-      <div class="input-row">
         <div class="input-group">
-          <label>Known Perfect Bulk</label>
-          <input type="text" id="rr-knownBulk" placeholder="e.g. 4.4083e16" autocomplete="off">
+          <label>Rune Bulk</label>
+          <input type="text" id="rr-bulk" placeholder="e.g. 269.88SpVt" autocomplete="off" oninput="rrCalc()">
+        </div>
+        <div class="input-group" style="flex:0.4">
+          <label>Rune Clone</label>
+          <input type="text" id="rr-clone" placeholder="e.g. 509" autocomplete="off" oninput="rrCalc()">
         </div>
       </div>
-      <div style="margin-top:12px;">
-        <button class="btn btn-primary" style="background:var(--surface2);border-color:var(--border-glow);color:var(--text);" onclick="rrShowProjections()">Show Tier Projections</button>
-      </div>
-      <div class="suffix-ref">
-        <span style="font-size:11px;color:var(--text-dim);margin-right:4px;">Suffixes:</span>
-        <span class="suffix-chip"><strong>K</strong> 1e3</span>
-        <span class="suffix-chip"><strong>M</strong> 1e6</span>
-        <span class="suffix-chip"><strong>B</strong> 1e9</span>
-        <span class="suffix-chip"><strong>T</strong> 1e12</span>
-        <span class="suffix-chip"><strong>Qd</strong> 1e15</span>
-        <span class="suffix-chip"><strong>Qn</strong> 1e18</span>
-        <span class="suffix-chip"><strong>Sx</strong> 1e21</span>
-        <span class="suffix-chip"><strong>Sp</strong> 1e24</span>
-        <span class="suffix-chip"><strong>Oc</strong> 1e27</span>
-        <span class="suffix-chip"><strong>No</strong> 1e30</span>
-        <span class="suffix-chip"><strong>De</strong> 1e33</span>
-        <span class="suffix-chip"><strong>UDe</strong> 1e36</span>
-        <span class="suffix-chip"><strong>DDe</strong> 1e39</span>
-        <span class="suffix-chip"><strong>TDe</strong> 1e42</span>
-        <span class="suffix-chip"><strong>QdDe</strong> 1e45</span>
-        <span class="suffix-chip"><strong>QnDe</strong> 1e48</span>
-        <span class="suffix-chip"><strong>SxDe</strong> 1e51</span>
-        <span class="suffix-chip"><strong>SpDe</strong> 1e54</span>
-        <span class="suffix-chip"><strong>OcDe</strong> 1e57</span>
-        <span class="suffix-chip"><strong>NoDe</strong> 1e60</span>
-        <span class="suffix-chip"><strong>Vt</strong> 1e63</span>
+      <div class="input-row" style="margin-top:12px;">
+        <div class="input-group" style="flex:0.4">
+          <label>Current Rare Rune Milestone Tier</label>
+          <input type="text" placeholder="e.g. 15" id="rr-tierInput" value="" autocomplete="off" oninput="rrCalc()">
+        </div>
       </div>
     </div>
 
-    <!-- Search panel -->
-    <div class="panel hidden" id="rr-searchPanel">
-      <div class="panel-title">Active Search</div>
-      <div class="search-state">
-        <div class="current-test">
-          <div class="label">Test This Bulk — <span id="rr-searchMode" style="color:var(--accent);opacity:0.7">LOG PHASE</span></div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="value" id="rr-currentValue">—</div>
-            <button class="btn-copy" onclick="rrCopyBulk()" id="rr-copyBtn">Copy</button>
-          </div>
-          <div class="raw" id="rr-currentRaw">—</div>
-        </div>
-        <div class="step-badge"><span>Step</span><strong id="rr-stepNum">1</strong></div>
-      </div>
-      <div class="range-bar">
-        <div class="range-labels"><span id="rr-rangeLow">0</span><span id="rr-rangeHigh">—</span></div>
-        <div class="range-track">
-          <div class="range-fill" id="rr-rangeFill"></div>
-          <div class="range-marker" id="rr-rangeMarker"></div>
-        </div>
-      </div>
-      <div class="decision-row">
-        <button class="btn btn-too-low" onclick="rrDecide('low')">Too Low<br><span style="font-size:11px;opacity:0.7">No rune after 1min</span></button>
-        <button class="btn btn-perfect" onclick="rrDecide('found')">Perfect<br><span style="font-size:11px;opacity:0.7">Counts toward milestone</span></button>
-        <button class="btn btn-too-high" onclick="rrDecide('high')">Too High<br><span style="font-size:11px;opacity:0.7">Doesn't count</span></button>
-      </div>
-      <div style="margin-top:10px;text-align:center;">
-        <button class="btn-undo hidden" id="rr-undoBtn" onclick="rrUndo()">Undo Last Step</button>
-      </div>
-    </div>
-
-    <!-- Projections -->
-    <div class="panel hidden" id="rr-projectionsPanel">
-      <div class="panel-title">Projected Bulk Per Tier</div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier multiplies rune speed by 1.13x, so bulk decreases to maintain the same rate.</div>
-      <div class="tier-table" id="rr-projectionsTable"></div>
-    </div>
-
-    <!-- Log -->
-    <div class="panel" id="rr-logPanel">
-      <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>Search Log</span>
-        <button class="btn-reset" onclick="rrReset()">Reset</button>
-      </div>
-      <div class="log" id="rr-logList">
-        <div class="empty-log">Start a search to see the log</div>
+    <!-- Result -->
+    <div class="hidden" id="rr-resultPanel">
+      <div class="summary-banner" id="rr-resultBanner"></div>
+      <div class="panel">
+        <div class="panel-title">Projected Bulk Per Tier</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Each tier multiplies rune speed by 1.13×, so your perfect bulk decreases at each tier-up.</div>
+        <div class="tier-table" id="rr-projectionsTable"></div>
       </div>
     </div>
   </div>
@@ -727,149 +644,110 @@ function switchTab(tabId) {
 }
 
 // ============================================================
-// RARE RUNES — Binary search bulk finder
+// RARE RUNES — Direct bulk calculator
 // ============================================================
-let rr = { lo: 0, hi: 0, mid: 0, step: 1, log: [], phase: 'log', logLo: 0, logHi: 0, history: [], lastPerfect: null };
+const RARE_RUNE_TIERS = [
+  { name: 'Prismatic Slime', constant: 3.5625e13 },
+  { name: 'Deep Freeze', constant: 3.5625e22 },
+  { name: 'Genesis Slime', constant: 2.700118e40 },
+];
 
-function rrComputeMid() {
-  if (rr.phase === 'log') return Math.pow(10, (rr.logLo + rr.logHi) / 2);
-  return (rr.lo + rr.hi) / 2;
-}
+function rrCalc() {
+  const rps = parseShort(document.getElementById('rr-rps').value) || 0;
+  const bulk = parseShort(document.getElementById('rr-bulk').value) || 0;
+  const clone = parseInt(document.getElementById('rr-clone').value) || 0;
+  const currentTier = parseInt(document.getElementById('rr-tierInput').value) || 1;
 
-function rrStartSearch() {
-  const startVal = parseShort(document.getElementById('rr-startInput').value);
-  if (isNaN(startVal) || startVal <= 0) return;
-  rr = { lo: 1, hi: startVal, mid: 0, step: 1, log: [], phase: 'log', logLo: 0, logHi: Math.log10(startVal), history: [], lastPerfect: null };
-  rr.mid = rrComputeMid();
-  document.getElementById('rr-searchPanel').classList.remove('hidden');
-  document.getElementById('rr-projectionsPanel').classList.add('hidden');
-  document.getElementById('rr-logList').innerHTML = '';
-  rrUpdateUI();
-}
+  const resultPanel = document.getElementById('rr-resultPanel');
+  const banner = document.getElementById('rr-resultBanner');
+  const table = document.getElementById('rr-projectionsTable');
 
-function rrDecide(result) {
-  rr.history.push({ ...rr, log: [...rr.log], history: null });
-  rr.log.push({ step: rr.step, value: rr.mid, short: toShort(rr.mid), sci: toSci(rr.mid), result, phase: rr.phase });
-  rrAddLogEntry(rr.log[rr.log.length - 1]);
-
-  if (result === 'found') {
-    rr.lastPerfect = rr.mid;
-    rrShowFound(rr.mid);
+  if (rps <= 0 || bulk <= 0 || clone <= 0) {
+    resultPanel.classList.add('hidden');
     return;
   }
 
-  if (rr.phase === 'log') {
-    const midExp = (rr.logLo + rr.logHi) / 2;
-    if (result === 'low') { rr.logLo = midExp; rr.lo = Math.pow(10, rr.logLo); }
-    else { rr.logHi = midExp; rr.hi = Math.pow(10, rr.logHi); }
-    if (Math.log10(Math.pow(10, rr.logHi)) - Math.log10(Math.pow(10, rr.logLo)) <= 1) {
-      rr.phase = 'linear'; rr.lo = Math.pow(10, rr.logLo); rr.hi = Math.pow(10, rr.logHi);
-    }
+  const speed = rps / bulk / clone;
+
+  // Determine which rare rune to target based on speed
+  let target;
+  if (speed < RARE_RUNE_TIERS[0].constant) {
+    target = RARE_RUNE_TIERS[0];
+  } else if (speed < RARE_RUNE_TIERS[1].constant) {
+    target = RARE_RUNE_TIERS[1];
   } else {
-    if (result === 'low') rr.lo = rr.mid; else rr.hi = rr.mid;
+    target = RARE_RUNE_TIERS[2];
   }
 
-  rr.step++;
-  rr.mid = rrComputeMid();
-  rrUpdateUI();
-  document.getElementById('rr-undoBtn').classList.remove('hidden');
-}
+  const perfectBulk = Math.floor(target.constant / speed);
+  const cloneVal = parseInt(document.getElementById('rr-clone').value) || 1;
+  const raresPerSec = cloneVal / 30; // ~1 rare rune per 30 secs per clone
 
-function rrUndo() {
-  if (rr.history.length === 0) return;
-  const prev = rr.history.pop();
-  Object.assign(rr, prev);
-  rr.history = rr.history || [];
-  const logList = document.getElementById('rr-logList');
-  if (logList.firstChild) logList.removeChild(logList.firstChild);
-  rrUpdateUI();
-  if (rr.history.length === 0) document.getElementById('rr-undoBtn').classList.add('hidden');
-}
+  resultPanel.classList.remove('hidden');
+  banner.innerHTML = `
+    <div class="label">Set Your Bulk To</div>
+    <div class="value">${perfectBulk}</div>
+    <div class="sub">for ${target.name} · Speed: ${toShort(speed)}/s · ~${(raresPerSec * 60).toFixed(1)} rare/min</div>
+  `;
 
-function rrCopyBulk() {
-  navigator.clipboard.writeText(document.getElementById('rr-currentValue').textContent).then(() => {
-    const btn = document.getElementById('rr-copyBtn');
-    btn.textContent = 'Copied'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1200);
-  });
-}
-
-function rrUpdateUI() {
-  document.getElementById('rr-currentValue').textContent = toSci(rr.mid);
-  document.getElementById('rr-currentRaw').textContent = toShort(rr.mid);
-  document.getElementById('rr-stepNum').textContent = rr.step;
-  const mode = document.getElementById('rr-searchMode');
-  mode.textContent = rr.phase === 'log' ? 'LOG PHASE' : 'LINEAR PHASE';
-  mode.style.color = rr.phase === 'log' ? 'var(--accent)' : 'var(--yellow)';
-  document.getElementById('rr-rangeLow').textContent = rr.lo <= 1 ? '1' : toShort(rr.lo);
-  document.getElementById('rr-rangeHigh').textContent = toShort(rr.hi);
-
-  const origHi = parseShort(document.getElementById('rr-startInput').value) || rr.hi;
-  const total = Math.log10(origHi);
-  if (total > 0) {
-    const loP = (Math.log10(Math.max(rr.lo, 1)) / total) * 100;
-    const hiP = (Math.log10(rr.hi) / total) * 100;
-    const midP = (Math.log10(rr.mid) / total) * 100;
-    document.getElementById('rr-rangeFill').style.left = loP + '%';
-    document.getElementById('rr-rangeFill').style.width = Math.max(hiP - loP, 0.5) + '%';
-    document.getElementById('rr-rangeMarker').style.left = midP + '%';
-  }
-}
-
-function rrAddLogEntry(entry) {
-  const logList = document.getElementById('rr-logList');
-  const empty = logList.querySelector('.empty-log'); if (empty) empty.remove();
-  const div = document.createElement('div'); div.className = 'log-entry';
-  const cls = entry.result === 'low' ? 'low' : entry.result === 'high' ? 'high' : 'found';
-  const lbl = entry.result === 'low' ? 'Too Low' : entry.result === 'high' ? 'Too High' : 'Perfect';
-  div.innerHTML = `<span class="log-step">#${entry.step}</span><span class="log-value">${entry.sci} <span style="color:var(--text-dim);font-size:11px;">(${entry.short})</span></span><span class="log-result ${cls}">${lbl}</span>`;
-  logList.prepend(div);
-}
-
-function rrShowFound(val) {
-  rr.lastPerfect = val;
-  document.getElementById('rr-searchPanel').classList.add('hidden');
-  const tier = parseInt(document.getElementById('rr-tierInput').value) || 1;
-  rrBuildProjections(val, tier);
-}
-
-function rrShowProjections() {
-  const val = parseShort(document.getElementById('rr-knownBulk').value);
-  const tier = parseInt(document.getElementById('rr-tierInput').value) || 1;
-  if (isNaN(val) || val <= 0) return;
-  rr.lastPerfect = val;
-  document.getElementById('rr-searchPanel').classList.add('hidden');
-  rrBuildProjections(val, tier);
-}
-
-function rrBuildProjections(perfectBulk, currentTier) {
-  const panel = document.getElementById('rr-projectionsPanel');
-  const table = document.getElementById('rr-projectionsTable');
-  panel.classList.remove('hidden');
+  // Build tier projections
   table.innerHTML = '';
-
-  const currentMulti = Math.pow(1.13, currentTier - 1);
   const header = document.createElement('div');
   header.className = 'tier-row header-row';
-  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Bulk</span><span class="tier-col tier-boost">Runes Req</span><span class="tier-col tier-time">Speed</span>';
+  header.innerHTML = '<span class="tier-col tier-num">Tier</span><span class="tier-col tier-req">Perfect Bulk</span><span class="tier-col tier-boost">Runes Needed</span><span class="tier-col tier-rps">Rune</span><span class="tier-col tier-time">Time</span>';
   table.appendChild(header);
 
-  for (let t = currentTier; t <= Math.min(currentTier + 8, 30); t++) {
-    const multi = Math.pow(1.13, t - 1);
-    const bulk = perfectBulk * currentMulti / multi;
-    const req = Math.round(2 * Math.pow(1.5, t - 1));
+  const currentSpeedMulti = Math.pow(1.13, currentTier - 1);
+  // If at tier 18, you've completed T18 and have round(2 * 1.5^17) rare runes
+  const currentThreshold = currentTier > 1 ? Math.round(2 * Math.pow(1.5, currentTier - 1)) : 0;
+
+  for (let t = currentTier; t <= Math.min(currentTier + 12, 30); t++) {
+    const tierMulti = Math.pow(1.13, t - 1);
+    const tierSpeed = speed * tierMulti / currentSpeedMulti;
+
+    let tierTarget;
+    if (tierSpeed < RARE_RUNE_TIERS[0].constant) {
+      tierTarget = RARE_RUNE_TIERS[0];
+    } else if (tierSpeed < RARE_RUNE_TIERS[1].constant) {
+      tierTarget = RARE_RUNE_TIERS[1];
+    } else {
+      tierTarget = RARE_RUNE_TIERS[2];
+    }
+
+    const tierBulk = Math.floor(tierTarget.constant / tierSpeed);
+
+    // Threshold to reach this tier = round(2 * 1.5^(t-1))
+    // Total runes needed from where we are now
+    const tierThreshold = Math.round(2 * Math.pow(1.5, t - 1));
+    const runesFromCurrent = tierThreshold - currentThreshold;
+    const timeFromNow = runesFromCurrent / raresPerSec;
+
+    // Incremental runes for display
+    const prevThreshold = t > 1 ? Math.round(2 * Math.pow(1.5, t - 2)) : 0;
+    const runesIncremental = tierThreshold - prevThreshold;
+
     const row = document.createElement('div');
     row.className = 'tier-row' + (t === currentTier ? ' current' : '');
-    row.innerHTML = `<span class="tier-col tier-num"><strong>T${t}</strong></span><span class="tier-col tier-req">${toSci(bulk)}</span><span class="tier-col tier-boost">${req.toLocaleString()}</span><span class="tier-col tier-time">x${multi.toFixed(2)}</span>`;
+
+    if (t === 30) {
+      row.innerHTML = `
+        <span class="tier-col tier-num"><strong>T${t}</strong></span>
+        <span class="tier-col tier-req" style="color:var(--accent);">MAX</span>
+        <span class="tier-col tier-boost">—</span>
+        <span class="tier-col tier-rps">—</span>
+        <span class="tier-col tier-time" style="color:var(--accent);">${t === currentTier ? 'Complete' : '—'}</span>
+      `;
+    } else {
+      row.innerHTML = `
+        <span class="tier-col tier-num"><strong>T${t}</strong></span>
+        <span class="tier-col tier-req">${tierBulk}</span>
+        <span class="tier-col tier-boost">${runesIncremental}</span>
+        <span class="tier-col tier-rps">${tierTarget.name}</span>
+        <span class="tier-col tier-time">${t === currentTier ? 'Current' : formatDuration(timeFromNow)}</span>
+      `;
+    }
     table.appendChild(row);
   }
-}
-
-function rrReset() {
-  document.getElementById('rr-searchPanel').classList.add('hidden');
-  document.getElementById('rr-projectionsPanel').classList.add('hidden');
-  document.getElementById('rr-logList').innerHTML = '<div class="empty-log">Start a search to see the log</div>';
-  rr = { lo: 0, hi: 0, mid: 0, step: 1, log: [], phase: 'log', logLo: 0, logHi: 0, history: [], lastPerfect: null };
 }
 
 // ============================================================
