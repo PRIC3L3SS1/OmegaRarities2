@@ -1,4 +1,3 @@
-// ==================== Suffix / Number Parsing ====================
 
 const SUFFIXES = [
   ['NoQg', 1e150], ['OcQg', 1e147], ['SpQg', 1e144], ['SxQg', 1e141],
@@ -44,7 +43,6 @@ function toSci(n) {
   return n.toExponential(4);
 }
 
-// ==================== Formatting Helpers ====================
 
 function formatDuration(seconds) {
   if (!isFinite(seconds) || seconds <= 0) return '—';
@@ -83,7 +81,6 @@ function parseTimeString(str) {
   return total;
 }
 
-// ==================== UI Helpers ====================
 
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -109,7 +106,6 @@ function switchTab(tabId) {
   event.target.classList.add('active');
 }
 
-// ==================== Rare Runes Calculator ====================
 
 const RARE_RUNE_TIERS = [
   { name: 'Prismatic Slime', constant: 3.5625e13 },
@@ -209,8 +205,6 @@ function rrCalc() {
   }
 }
 
-// ==================== Runes Rolled Calculator ====================
-
 function rolledReq(tier) { return 100 * Math.pow(1.4, tier - 1); }
 function rolledBoost(tier) { return Math.pow(1.1, tier - 1); }
 
@@ -302,8 +296,6 @@ function rolledCalc() {
   }
 }
 
-// ==================== Luck Calculator ====================
-
 function luckReq(tier) { return tier * 5; }
 function luckBoost(tier) { return Math.pow(3, tier - 1); }
 
@@ -356,8 +348,6 @@ function luckCalc() {
   }
 }
 
-// ==================== Time Played Calculator ====================
-
 const TIME_REQS = [600, 1800, 3600, 7200, 18000, 36000, 86400, 172800, 259200, 360000, 604800, 1080000];
 
 function timeCalc() {
@@ -408,8 +398,6 @@ function timeCalc() {
     table.appendChild(row);
   }
 }
-
-// ==================== Init ====================
 
 document.addEventListener('DOMContentLoaded', function() {
   timeCalc();
