@@ -106,7 +106,7 @@ function switchTab(tabId) {
 const RARE_RUNE_TIERS = [
   { name: 'Prismatic Slime', constant: 3.5625e13 },
   { name: 'Deep Freeze', constant: 3.5625e22 },
-  { name: 'Genesis Slime', constant: 2.700118e40 },
+  { name: 'Genesis Slime', constant: 2.69e40 },
 ];
 
 function rrCalc() {
